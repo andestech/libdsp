@@ -22,5 +22,5 @@ Open source for Andes DSP library
 
   - Here is a demo.c for function "riscv_dsp_add_f32"
 
-     $ riscv32-elf-gcc -I./include -o demo.adx demo.c build_dir/libdsp.a  <br>
-     $ gcc -I./include -o demo.adx demo.c build_dir/libdsp.a
+     $ riscv32-elf-gcc -I./include -o demo.adx demo.c build_dir/libdsp.a  ## for Andes toolchain <br>
+     $ gcc -I./include -o demo.adx demo.c build_dir/libdsp.a              ## for x86 toolchain

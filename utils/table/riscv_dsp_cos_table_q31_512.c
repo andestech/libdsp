@@ -1,0 +1,162 @@
+/******************************************************************************
+ * Copyright (C) 2010-2023 Arm Limited or its affiliates. All rights reserved.*
+ * Copyright (C) 2018-2023 Andes Technology Corporation. All rights reserved. *
+ *                                                                            *
+ * SPDX-License-Identifier: Apache-2.0                                        *
+ *                                                                            *
+ * Licensed under the Apache License, Version 2.0 (the License); you may      *
+ * not use this file except in compliance with the License.                   *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * www.apache.org/licenses/LICENSE-2.0                                        *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT    *
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.           *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
+#include "internal_math_types.h"
+
+/**
+ * cosine look-up table:
+ *   cos(x) where 0 <= x <= PI / 2
+ * #ifdef HERMITE_INTERPOLATION
+ *   riscv_dsp_cos_table_q31_512[k + 2] = cos(2 * PI * k / 512)
+ * #else
+ *   riscv_dsp_cos_table_q31_512[k] = cos(2 * PI * k / 512)
+ * #endif
+ * where 0 <= k <= 128.
+ **/
+
+#ifdef HERMITE_INTERPOLATION
+const q31_t riscv_dsp_cos_table_q31_512[133] =
+{
+    0x7ff62182, 0x7ffd885a,
+    0x7fffffff, 0x7ffd885a, 0x7ff62182, 0x7fe9cbc0,
+#else
+const q31_t riscv_dsp_cos_table_q31_512[129] =
+{
+    0x7fffffff, 0x7ffd885a, 0x7ff62182, 0x7fe9cbc0,
+#endif
+    0x7fd8878e, 0x7fc25596, 0x7fa736b4, 0x7f872bf3,
+    0x7f62368f, 0x7f3857f6, 0x7f0991c4, 0x7ed5e5c6,
+    0x7e9d55fc, 0x7e5fe493, 0x7e1d93ea, 0x7dd6668f,
+    0x7d8a5f40, 0x7d3980ec, 0x7ce3ceb2, 0x7c894bde,
+    0x7c29fbee, 0x7bc5e290, 0x7b5d039e, 0x7aef6323,
+    0x7a7d055b, 0x7a05eead, 0x798a23b1, 0x7909a92d,
+    0x78848414, 0x77fab989, 0x776c4edb, 0x76d94989,
+    0x7641af3d, 0x75a585cf, 0x7504d345, 0x745f9dd1,
+    0x73b5ebd1, 0x7307c3d0, 0x72552c85, 0x719e2cd2,
+    0x70e2cbc6, 0x7023109a, 0x6f5f02b2, 0x6e96a99d,
+    0x6dca0d14, 0x6cf934fc, 0x6c242960, 0x6b4af279,
+    0x6a6d98a4, 0x698c246c, 0x68a69e81, 0x67bd0fbd,
+    0x66cf8120, 0x65ddfbd3, 0x64e88926, 0x63ef3290,
+    0x62f201ac, 0x61f1003f, 0x60ec3830, 0x5fe3b38d,
+    0x5ed77c8a, 0x5dc79d7c, 0x5cb420e0, 0x5b9d1154,
+    0x5a82799a, 0x59646498, 0x5842dd54, 0x571deefa,
+    0x55f5a4d2, 0x54ca0a4b, 0x539b2af0, 0x5269126e,
+    0x5133cc94, 0x4ffb654d, 0x4ebfe8a5, 0x4d8162c4,
+    0x4c3fdff4, 0x4afb6c98, 0x49b41533, 0x4869e665,
+    0x471cece7, 0x45cd358f, 0x447acd50, 0x4325c135,
+    0x41ce1e65, 0x4073f21d, 0x3f1749b8, 0x3db832a6,
+    0x3c56ba70, 0x3af2eeb7, 0x398cdd32, 0x382493b0,
+    0x36ba2014, 0x354d9057, 0x33def287, 0x326e54c7,
+    0x30fbc54d, 0x2f875262, 0x2e110a62, 0x2c98fbba,
+    0x2b1f34eb, 0x29a3c485, 0x2826b928, 0x26a82186,
+    0x25280c5e, 0x23a6887f, 0x2223a4c5, 0x209f701c,
+    0x1f19f97b, 0x1d934fe5, 0x1c0b826a, 0x1a82a026,
+    0x18f8b83c, 0x176dd9de, 0x15e21445, 0x145576b1,
+    0x12c8106f, 0x1139f0cf, 0x0fab272b, 0x0e1bc2e4,
+    0x0c8bd35e, 0x0afb6805, 0x096a9049, 0x07d95b9e,
+    0x0647d97c, 0x04b6195d, 0x03242abf, 0x01921d20,
+#ifdef HERMITE_INTERPOLATION
+    0x00000000, 0xfe6de2e0, 0xfcdbd541
+#else
+    0x00000000
+#endif
+};
+
+const q31_t riscv_dsp_cos_table_q31_linear_512[129] =
+{
+    0x7fffffff, 0x7ffd885a, 0x7ff62182, 0x7fe9cbc0,
+    0x7fd8878e, 0x7fc25596, 0x7fa736b4, 0x7f872bf3,
+    0x7f62368f, 0x7f3857f6, 0x7f0991c4, 0x7ed5e5c6,
+    0x7e9d55fc, 0x7e5fe493, 0x7e1d93ea, 0x7dd6668f,
+    0x7d8a5f40, 0x7d3980ec, 0x7ce3ceb2, 0x7c894bde,
+    0x7c29fbee, 0x7bc5e290, 0x7b5d039e, 0x7aef6323,
+    0x7a7d055b, 0x7a05eead, 0x798a23b1, 0x7909a92d,
+    0x78848414, 0x77fab989, 0x776c4edb, 0x76d94989,
+    0x7641af3d, 0x75a585cf, 0x7504d345, 0x745f9dd1,
+    0x73b5ebd1, 0x7307c3d0, 0x72552c85, 0x719e2cd2,
+    0x70e2cbc6, 0x7023109a, 0x6f5f02b2, 0x6e96a99d,
+    0x6dca0d14, 0x6cf934fc, 0x6c242960, 0x6b4af279,
+    0x6a6d98a4, 0x698c246c, 0x68a69e81, 0x67bd0fbd,
+    0x66cf8120, 0x65ddfbd3, 0x64e88926, 0x63ef3290,
+    0x62f201ac, 0x61f1003f, 0x60ec3830, 0x5fe3b38d,
+    0x5ed77c8a, 0x5dc79d7c, 0x5cb420e0, 0x5b9d1154,
+    0x5a82799a, 0x59646498, 0x5842dd54, 0x571deefa,
+    0x55f5a4d2, 0x54ca0a4b, 0x539b2af0, 0x5269126e,
+    0x5133cc94, 0x4ffb654d, 0x4ebfe8a5, 0x4d8162c4,
+    0x4c3fdff4, 0x4afb6c98, 0x49b41533, 0x4869e665,
+    0x471cece7, 0x45cd358f, 0x447acd50, 0x4325c135,
+    0x41ce1e65, 0x4073f21d, 0x3f1749b8, 0x3db832a6,
+    0x3c56ba70, 0x3af2eeb7, 0x398cdd32, 0x382493b0,
+    0x36ba2014, 0x354d9057, 0x33def287, 0x326e54c7,
+    0x30fbc54d, 0x2f875262, 0x2e110a62, 0x2c98fbba,
+    0x2b1f34eb, 0x29a3c485, 0x2826b928, 0x26a82186,
+    0x25280c5e, 0x23a6887f, 0x2223a4c5, 0x209f701c,
+    0x1f19f97b, 0x1d934fe5, 0x1c0b826a, 0x1a82a026,
+    0x18f8b83c, 0x176dd9de, 0x15e21445, 0x145576b1,
+    0x12c8106f, 0x1139f0cf, 0x0fab272b, 0x0e1bc2e4,
+    0x0c8bd35e, 0x0afb6805, 0x096a9049, 0x07d95b9e,
+    0x0647d97c, 0x04b6195d, 0x03242abf, 0x01921d20,
+    0x00000000
+};
+
+/***************************************************************************
+ * cosine reciprocal table:                                                *
+ *   1 / (2 * cos(x)) where 0 <= x <= PI / 2                               *
+ *   riscv_dsp_cos_recip_table_q31_512[k] = 1 / (2 * cos(2 * PI * k / 512))  *
+ *   where 0 <= k < 128.                                                   *
+ * Note: All values are right-shifted 6 (log2(512) - 3) bits.             *
+ *       That is, the return values are Q6.25 numbers.                     *
+ ***************************************************************************/
+
+const unsigned riscv_dsp_cos_recip_table_q31_512[128] =
+{
+    0x02000000, 0x020009df, 0x0200277d, 0x020058e0,
+    0x02009e13, 0x0200f721, 0x0201641c, 0x0201e51a,
+    0x02027a34, 0x02032386, 0x0203e131, 0x0204b35b,
+    0x02059a2e, 0x020695d6, 0x0207a686, 0x0208cc74,
+    0x020a07da, 0x020b58f9, 0x020cc015, 0x020e3d76,
+    0x020fd16b, 0x02117c48, 0x02133e66, 0x02151822,
+    0x021709e0, 0x0219140c, 0x021b3715, 0x021d7373,
+    0x021fc9a1, 0x02223a25, 0x0224c58b, 0x02276c65,
+    0x022a2f4f, 0x022d0eed, 0x02300be9, 0x023326fa,
+    0x023660de, 0x0239ba5e, 0x023d344c, 0x0240cf88,
+    0x02448cfa, 0x02486d99, 0x024c7269, 0x02509c78,
+    0x0254ece8, 0x025964e4, 0x025e05ae, 0x0262d092,
+    0x0267c6f4, 0x026cea48, 0x02723c17, 0x0277be00,
+    0x027d71b9, 0x02835910, 0x028975ef, 0x028fca59,
+    0x02965873, 0x029d227e, 0x02a42ae0, 0x02ab7422,
+    0x02b300f5, 0x02bad435, 0x02c2f0e9, 0x02cb5a4d,
+    0x02d413cd, 0x02dd2111, 0x02e685ff, 0x02f046bc,
+    0x02fa67b7, 0x0304edaf, 0x030fddb4, 0x031b3d34,
+    0x03271201, 0x0333625c, 0x034034fa, 0x034d9116,
+    0x035b7e79, 0x036a058a, 0x03792f5b, 0x038905c1,
+    0x0399935e, 0x03aae3c2, 0x03bd037c, 0x03d0003b,
+    0x03e3e8ee, 0x03f8cde7, 0x040ec10a, 0x0425d5f8,
+    0x043e224b, 0x0457bdd3, 0x0472c2e7, 0x048f4eb5,
+    0x04ad81a9, 0x04cd7fe9, 0x04ef71d9, 0x051384c6,
+    0x0539eba4, 0x0562e001, 0x058ea313, 0x05bd7f15,
+    0x05efc8d9, 0x0625e1c8, 0x06603a45, 0x069f54b2,
+    0x06e3c92c, 0x072e4a47, 0x077fab0f, 0x07d8e6c7,
+    0x083b2af2, 0x08a7e48f, 0x0920d1bc, 0x09a8198f,
+    0x0a406ce8, 0x0aed345b, 0x0bb2d1cb, 0x0c970054,
+    0x0da1641a, 0x0edc6898, 0x1056a449, 0x12252974,
+    0x14679381, 0x174f8d8b, 0x1b2fdf6b, 0x209d8a7d,
+    0x28c2917d, 0x3656502f, 0x517ed9eb, 0xa2fa8f85
+};
+

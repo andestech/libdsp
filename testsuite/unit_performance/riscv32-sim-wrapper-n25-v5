@@ -1,0 +1,48 @@
+#!/bin/bash
+#set -x
+
+OLD_PWD=`pwd`
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+echo ${0##*/} "..."
+
+# this value should be dynamic or static. The default is static
+LINK="static"
+
+# this value should be replaced by build system when start testing
+SIMULATOR_DIR=${THIS_DIR}
+
+# the following variables will combine directory name and file name to form a full-path
+CONF_FILE=${SIMULATOR_DIR}/riscv32-elf-mculib-v5-n25.user.conf
+RUN_SID=${SIMULATOR_DIR}/sid
+
+# check if the execution file is available
+if [ "$1" = "" ] || [ ! -f "$1" ]; then
+    echo ""
+    echo "No such file $1"
+    echo ""
+    exit 1
+fi
+
+# get the executable file
+#RUN_FILE=${OLD_PWD}/${1##*/}
+RUN_FILE=${OLD_PWD}/$1
+
+# physically invoke simulator
+# use --rc to return execution result and feed sid with $CONF_FILE
+# use -e to assign $RUN_FILE dynamically
+if [ $LINK  ==  "dynamic" ] ; then
+$RUN_SID --rc -f $CONF_FILE \
+    -e "set cpu-loader file \"$RUN_FILE\"" \
+    -e "set gloss sysroot \"$SYSROOT\""
+else
+$RUN_SID --rc -f $CONF_FILE \
+    -e "set cpu-loader file \"$RUN_FILE\""
+fi
+# Note. Please do NOT add any command between $RUN_SID blah blah blah... and ret=$? to make sure
+# the scirpt can get correct return value from SID.
+ret=$?
+
+cd ${OLD_PWD}
+
+exit ${ret}

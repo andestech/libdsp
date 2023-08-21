@@ -1,0 +1,44 @@
+#!/bin/bash
+#set -x
+
+OLD_PWD=`pwd`
+ADX_PATH="$( cd "$( dirname "$1" )" && echo `pwd`/$(basename "$1"))"
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# This file is a sid simulator wrapper shell script for both nds32le-elf & nds32be-elf,
+# which is called during the plumhall/supertest testsuite verification flow.
+#
+# Currently, the nds32 simulator -- sid -- does not run program in intuitive way.
+# The simulatior requires a conf file in which the execution file is strictly specified.
+# We use this wrapper script to complete the work so that gcc testsuite can easily use it to do simulation.
+
+
+# this value should be replaced by build system when start testing
+SIMULATOR_DIR=${THIS_DIR}
+
+# the following variables will combine directory name and file name to form a full-path
+CONF_FILE=$SIMULATOR_DIR/nds32le-elf-mculib-v3.user.conf
+RUN_SID=$SIMULATOR_DIR/sid
+
+# check if the execution file is available
+if [ "$1" = "" ] || [ ! -f "$1" ]; then
+    echo ""
+    echo "No such file $1"
+    echo ""
+    exit 1
+fi
+
+# get the executable file
+RUN_FILE=$ADX_PATH
+
+# physically invoke simulator
+# use --rc to return execution result and feed sid with $CONF_FILE
+# use -e to assign $RUN_FILE dynamically
+$RUN_SID --rc -f $CONF_FILE -e "set cpu-loader file \"$RUN_FILE\""
+# Note. Please do NOT add any command between $RUN_SID blah blah blah... and ret=$? to make sure
+# the scirpt can get correct return value from SID.
+ret=$?
+
+cd ${OLD_PWD}
+
+exit ${ret}

@@ -1,2 +1,2 @@
-#define NDS_VERSION "nds_ver_240_ast-v5_3_0-branch_fa52434f"
+#define NDS_VERSION "nds_ver_250_ast-v5_3_0-branch_c0ff2909"
 char * get_version_libdsp(void){return NDS_VERSION;}

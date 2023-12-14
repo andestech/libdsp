@@ -822,8 +822,7 @@ typedef struct
 {
     uint32_t coeff_size;  /**< Number of filter coefficients */
     q15_t *state;         /**< Pointer of the state vector whose size is <code>coeff_size + size - 1</code> */
-    q15_t *coeff;         /**< Pointer of the time reversed coefficient vector whose size
-    q15                        is <code>coeff_size</code> */
+    q15_t *coeff;         /**< Pointer of the time reversed coefficient vector whose size is <code>coeff_size</code> */
     q15_t mu;             /**< Step size which can adjust coefficients */
     q15_t shift;          /**< number of coefficient bits to be shifted */
 } riscv_dsp_lms_q15_t;

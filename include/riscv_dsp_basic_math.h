@@ -776,8 +776,7 @@ void riscv_dsp_offset_u8(uint8_t *src, q7_t offset, uint8_t *dst, uint32_t size)
  * This example also serves as a reference for examples of Q31, Q15, or Q7 scale functions.
  *     </pre>
  */
-void riscv_dsp_scale_f32(float32_t *src, float32_t scale, float32_t *dst,
-                     uint32_t size);
+void riscv_dsp_scale_f32(float32_t *src, float32_t scale, float32_t *dst, uint32_t size);
 
 /**
  * @brief To multiply a q31 vectors by a q31 scale.
@@ -1192,4 +1191,4 @@ void riscv_dsp_not_u8(u8_t *src, u8_t *dst, uint32_t size);
 #ifdef  __cplusplus
 }
 #endif
-#endif // __RISCV_DSP32_BASIC_MATH_H__
+#endif // __RISCV_DSP_BASIC_MATH_H__

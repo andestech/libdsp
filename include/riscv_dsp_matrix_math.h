@@ -484,8 +484,7 @@ int32_t riscv_dsp_mat_pwr2_cache_f64(const float64_t *src, float64_t *dst, uint3
  * This example also serves as a reference for examples of Q31 or Q15 matrix scale functions.
  *     </pre>
  */
-void riscv_dsp_mat_scale_f32(const float32_t *src, float32_t scale,
-                         float32_t *dst, uint32_t row, uint32_t col);
+void riscv_dsp_mat_scale_f32(const float32_t *src, float32_t scale, float32_t *dst, uint32_t row, uint32_t col);
 
 /**
  * @brief Multiplt a scale value of q15 matrix.

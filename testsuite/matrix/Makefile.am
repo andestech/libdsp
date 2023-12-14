@@ -1,1 +1,0 @@
-SUBDIRS = f32 q15 q31

@@ -21,6 +21,7 @@
 
 #include "riscv_dsp_svm_math.h"   //for struct types
 #define STEP(x) (x) <= 0 ? 0 : 1
+#define DSP_SQUARE(x) (x * x)
 
 static inline float32_t _dsp_int_exp_f32(float32_t base, int32_t expt)
 {

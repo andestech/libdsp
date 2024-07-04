@@ -56,7 +56,8 @@ void riscv_dsp_svm_rbf_est_f32(
         dot = 0;
         for (j = 0; j < cntdim; j++)
         {
-            dot = dot + src[j] * *pvec++;
+            dot = dot + DSP_SQUARE(src[j] - *pvec);
+            pvec++;
         }
         sum += *pcoe++ * expf(-gm * dot);
     }

@@ -1,0 +1,43 @@
+#!/bin/bash
+#set -x
+
+OLD_PWD=`pwd`
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+#echo ${0##*/} "..."
+
+# this value should be dynamic or static. The default is static
+LINK="static"
+
+# this value should be replaced by build system when start testing
+SIMULATOR_DIR=${THIS_DIR}
+
+# QEMU configs
+RUN_QEMU=${QEMU}
+CPU=andes-d45,zfh=true,zk=true,zfbfmin=true
+CONFIG=${SIMULATOR_DIR}/ADP-AE350-D45.cfg
+
+# check if the execution file is available
+if [ "$1" = "" ] || [ ! -f "$1" ]; then
+    echo ""
+    echo "No such file $1"
+    echo ""
+    exit 1
+fi
+
+# get the executable file
+#RUN_FILE=${OLD_PWD}/${1##*/}
+RUN_FILE=${OLD_PWD}/$1
+
+# Run QEMU
+## Gen Debug log
+#$QEMU -readconfig $CONFIG -M andes_ae350 -D ../debug.log -d "exec,nochain,cpu,fpu,vpu,in_asm" -accel tcg,one-insn-per-tb=on -cpu $CPU -nographic -semihosting -bios $RUN_FILE 2>&1
+
+## Run qemu
+$RUN_QEMU -readconfig $CONFIG -M andes_ae350 -cpu $CPU -nographic -semihosting -bios $RUN_FILE 2>&1
+
+ret=$?
+
+cd ${OLD_PWD}
+
+exit ${ret}

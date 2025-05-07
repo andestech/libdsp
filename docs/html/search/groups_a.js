@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['multiplication_20functions_1500',['Multiplication Functions',['../group__basic__mul.html',1,'']]],
+  ['matrix_20functions_1501',['Matrix Functions',['../group__mat.html',1,'']]],
+  ['matrix_20addition_20functions_1502',['Matrix Addition Functions',['../group__mat__add.html',1,'']]],
+  ['matrix_20matrix_20cholesky_20decomposition_20function_1503',['Matrix Matrix Cholesky Decomposition Function',['../group__mat__chd.html',1,'']]],
+  ['matrix_20householder_20transform_20functions_1504',['Matrix Householder Transform Functions',['../group__mat__house.html',1,'']]],
+  ['matrix_20inverse_20function_1505',['Matrix Inverse Function',['../group__mat__inv.html',1,'']]],
+  ['matrix_20ldlt_20decomposition_20functions_1506',['Matrix LDLT Decomposition Functions',['../group__mat__ldlt.html',1,'']]],
+  ['matrix_20multiplication_20functions_1507',['Matrix Multiplication Functions',['../group__mat__mul.html',1,'']]],
+  ['matrix_20multiplies_20vector_20functions_1508',['Matrix Multiplies Vector Functions',['../group__mat__mul__mxv.html',1,'']]],
+  ['matrix_20outer_20product_20function_1509',['Matrix Outer Product Function',['../group__mat__oprod.html',1,'']]],
+  ['matrix_20power_202_20function_1510',['Matrix Power 2 Function',['../group__mat__pwr2.html',1,'']]],
+  ['matrix_20qr_20decomposition_20functions_1511',['Matrix QR Decomposition Functions',['../group__mat__qr.html',1,'']]],
+  ['matrix_20scale_20functions_1512',['Matrix Scale Functions',['../group__mat__scale.html',1,'']]],
+  ['matrix_20solve_20lower_20triangular_20functions_1513',['Matrix Solve Lower Triangular Functions',['../group__mat__solve__lt.html',1,'']]],
+  ['matrix_20solve_20upper_20triangular_20functions_1514',['Matrix Solve Upper Triangular Functions',['../group__mat__solve__ut.html',1,'']]],
+  ['matrix_20subtraction_20functions_1515',['Matrix Subtraction Functions',['../group__mat__sub.html',1,'']]],
+  ['matrix_20transpose_20functions_1516',['Matrix Transpose Functions',['../group__mat__trans.html',1,'']]],
+  ['maximum_20functions_1517',['Maximum Functions',['../group__max.html',1,'']]],
+  ['mean_20functions_1518',['Mean Functions',['../group__mean.html',1,'']]],
+  ['merge_20sort_20functions_1519',['Merge Sort Functions',['../group__merge__sort.html',1,'']]],
+  ['mfcc_1520',['Mfcc',['../group__mfcc.html',1,'']]],
+  ['minimum_20functions_1521',['Minimum Functions',['../group__min.html',1,'']]],
+  ['mean_20square_20error_20functions_1522',['Mean Square Error Functions',['../group__mse.html',1,'']]]
+];

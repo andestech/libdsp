@@ -1,0 +1,273 @@
+#!/usr/bin/expect
+
+# Set some variables
+
+# Setup the timeout value while simulating each test case on real board.
+# This value should be replaced by build system or manually changed.
+#   e.g. "set timeout 500"
+set timeout 50000
+
+# Setup the nds32 gdb full-path so that we can execute it to connect to aice.
+# This value should be replaced by build system or manually changed.
+#   e.g. "set gdb /path/to/nds32le-elf-newlib-v3/bin/nds32le-elf-gdb"
+set gdb riscv32-elf-gdb
+
+# Setup the host machine that iceman is running on.
+# This value should be replaced by build system or manually changed.
+#   e.g. "set host apc188"
+set host $::env(MYPC)
+
+#Setup the port opened by iceman connecting to real board.
+# This value should be replaced by build system or manually changed.
+#   e.g. "set port 1234"
+set port $::env(MYPORT)
+
+set elf [lindex $argv 0]
+set gcc [lindex $argv 1]
+set cache [lindex $argv 2]
+set reset [lindex $argv 3]
+set stdin [lindex $argv 4]
+set gdb_prompt_pattern ".*gdb\[)] "
+
+# Execute binary
+if { $gcc == "yes" } {
+  spawn $gdb -e "$elf"
+} else {
+  spawn $gdb -e "$elf" -return-child-result
+}
+
+# When timeout, will send contrlC to stop this program
+proc ctrlC {} {
+	send \003
+	set status 123
+	send "quit\n"
+	expect {
+		"Quit anyway?" {
+			send "y\n"
+		}
+	}
+	expect eof
+	exit $status
+}
+
+proc cache_on {} {
+		send_user "Start to enable I cache.\n"
+		enable_cache "1"
+
+        send_user "Start to enable D cache.\n"
+		enable_cache "2"
+}
+
+
+proc lm_on {} {
+        send_user "Start to enable_localmemory: ILM.\n"
+        enable_ilm
+
+        send_user "Start to enable_localmemory: DLM.\n"
+        enable_dlm
+}
+
+
+# Get register's value
+proc get_reg_value { x } {
+	global gdb_prompt_pattern
+
+	send "p/x (unsigned int)\$$x\n"
+	expect {
+		-re "(0x\[0-9a-fA-F]+)$gdb_prompt_pattern" {
+			set reg_value $expect_out(1,string)
+		}
+	}
+	return $reg_value
+}
+
+# Enable Icache or Dcache
+proc enable_cache { x } {
+	send "set (long)\$mcache_ctl |= 0x$x\n"
+	expect gdb { send_user "enable I/D cache done.\n" }
+}
+
+
+# Enable ILM
+proc enable_ilm {} {
+    send "set (long)\$milmb |= 0x1\n"
+	expect gdb { send_user "enable ILM done.\n" }
+}
+
+# Enable DLM
+proc enable_dlm {} {
+	send "set (long)\$mdlmb |= 0x1\n"
+	expect gdb { send_user "enable DLM done.\n" }
+
+}
+
+# Set hardware breakpoint in syscall entry point. (offset=8)
+proc set_syscall_hardware_bk {} {
+	set ir3 [expr [expr [ get_reg_value "ir3" ] & 0xc000 ] >> 14 ]
+	set list "0x4 0x10 0x40 0x100"
+	set syscall_value [expr [lindex $list $ir3] *8 ]
+
+	send "hb *$syscall_value\n"
+	expect gdb { send_user "set hw breakpoint in syscall.\n" }
+}
+
+# Check syscall is eqaul to 1 or not
+proc check_syscall_value {} {
+	global gdb_prompt_pattern
+
+	set ir6 [expr [expr [ get_reg_value "ir6" ] & 0x7fff0000 ] >> 16 ]
+
+	while { $ir6 != 1} {
+		send "c\n"
+		expect {
+			-re "Breakpoint 1$gdb_prompt_pattern" {  }
+			timeout { ctrlC }
+		}
+		set ir6 [expr [expr [ get_reg_value "ir6" ] & 0x7fff0000 ] >> 16 ]
+	}
+}
+
+# Some cases of supertest need CVALSTDIN
+proc STDIN {} {
+	global stdin
+
+	sleep 5
+        set file [open $stdin]
+        set inputs [split [read $file]]
+        close $file
+        foreach input $inputs {
+        send "$input\n"
+        }
+}
+
+# ====== Start to test =====
+# Check gdb status
+expect {
+	(gdb) {
+		send_user "startup gdb Success\n"
+	}
+	timeout {
+		send_user "startup gdb fail!\n"
+		ctrlC
+	}
+}
+
+# Set frame-arguments
+send "set print frame-arguments none\n"
+expect gdb { }
+
+# Try to connect to target 10 times
+for {set i 1} {$i <= 10} {incr i} {
+	send "target remote $host:$port\n"
+	expect {
+	    -re "Remote communication error.  Target disconnected.: Connection reset by peer.$gdb_prompt_pattern$" {
+		send_user "Connection reset by peer. Pausing, and trying again.\n"
+		sleep 1
+		continue
+	    }
+	    -re "Remote communication error.  Target disconnected.: Broken pipe.$gdb_prompt_pattern$" {
+		send_user "Broken pipe. Pausing, and trying again.\n"
+		sleep 1
+		continue
+	    }
+	    -re ".*Connection timed out$gdb_prompt_pattern$" {
+		send_user "connection timed out!\n"
+	        exit
+	    }
+	    -re ".*\[Ee\]rror$gdb_prompt_pattern$" {
+	        send_user "Couldn't set target for remote stub.\n"
+	        exit
+	    }
+	    -re "Remote debugging using$gdb_prompt_pattern$" {
+		send_user "Set target to ice\n"
+		break
+	    }
+	    timeout {
+		send_user "Couldn't set target for remote stub.\n"
+		exit
+	    }
+	}
+}
+if {$i == 11} {
+	send_user "Couldn't set target for remote stub. Maybe increase max retry time\n"
+	exit
+}
+
+
+# Reset board
+if { $reset == "on" } {
+	send "reset-and-hold\n"
+	expect {
+		-re "JTAG tap: nds.tap tap/device found: $gdb_prompt_pattern" {
+			send_user "reset-and-hold OK.\n"
+		}
+		timeout {
+			send_user " reset-and-hold fail!\n"
+			ctrlC
+		}
+	}
+}
+
+# Set interrupt level
+#set ir0 [get_reg_value "ir0"]
+#send "set \$ir0=[expr $ir0 & ~0x6]\n"
+#expect 	gdb {	send_user "set interrupt level\n" }
+
+# Check cache option to on or lm
+if { $cache == "on" } { cache_on }
+if { $cache == "lm" } { lm_on }
+
+#send "print \$idr1\n"
+#send "set \$idr1=0\n"
+#send "print \$idr1\n"
+
+
+# Load binary
+send "load\n"
+expect {
+	-re "Transfer rate$gdb_prompt_pattern" {
+		send_user "Load file OK.\n"
+	}
+	timeout {
+		send_user "Loading binary to target fail!\n"
+	}
+}
+
+# Check gcc test or not
+# If yes, we should set breakpoint in syscall entry point and get return value (r0).
+# If no, we just run the program.
+# Note: supertest need standard input.
+if { $gcc == "yes" } {
+        set_syscall_hardware_bk
+        send "c\n"
+	expect gdb {}
+	check_syscall_value
+        set r0 [ get_reg_value "r0" ]
+	send "del 1\n"
+	expect gdb {}
+        send "c\n"
+} else {
+        send "c\n"
+        if { $stdin != ""} { STDIN }
+}
+
+# Check finish or not
+expect {
+	-re "exited$gdb_prompt_pattern" {
+		send_user "Program exited.\n"
+	}
+	timeout {
+		send_user "Error!!!\n"
+		ctrlC
+	}
+}
+
+# Quit gdb
+send "quit\n"
+expect eof
+if { $gcc == "yes"} {
+        exit $r0
+} else {
+        catch wait reason
+        exit [lindex $reason 3]
+}

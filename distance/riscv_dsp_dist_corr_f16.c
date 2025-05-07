@@ -1,0 +1,45 @@
+/******************************************************************************
+ * Copyright (C) 2010-2025 Arm Limited or its affiliates. All rights reserved.*
+ * Copyright (C) 2018-2025 Andes Technology Corporation. All rights reserved. *
+ *                                                                            *
+ * SPDX-License-Identifier: Apache-2.0                                        *
+ *                                                                            *
+ * Licensed under the Apache License, Version 2.0 (the License); you may      *
+ * not use this file except in compliance with the License.                   *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * www.apache.org/licenses/LICENSE-2.0                                        *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT    *
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.           *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
+#include <config.h>
+#include <math.h>
+
+extern float16_t riscv_dsp_dprod_f16(float16_t *src1, float16_t *src2, uint32_t size);
+extern void riscv_dsp_offset_f16(float16_t *src, float16_t offset, float16_t *dst, uint32_t size);
+extern float16_t riscv_dsp_mean_f16(const float16_t *src, uint32_t size);
+extern float16_t riscv_dsp_pwr_f16(const float16_t *src, uint32_t size);
+extern float16_t riscv_dsp_sqrt_f16(float16_t src);
+
+float16_t riscv_dsp_dist_corr_f16(const float16_t * FUNC_RESTRICT src1, const float16_t * FUNC_RESTRICT src2, uint32_t size)
+{
+    float16_t mean1 = riscv_dsp_mean_f16(src1, size);
+    float16_t mean2 = riscv_dsp_mean_f16(src2, size);
+    riscv_dsp_offset_f16((float16_t *)src1, -mean1, (float16_t *)src1, size);
+    riscv_dsp_offset_f16((float16_t *)src2, -mean2, (float16_t *)src2, size);
+    float16_t pwr1 = riscv_dsp_pwr_f16(src1, size);
+    float16_t pwr2 = riscv_dsp_pwr_f16(src2, size);
+    float16_t dot = riscv_dsp_dprod_f16((float16_t *)src1, (float16_t *)src2, size);
+
+    dot = dot / size;
+    pwr1 = pwr1 / size;
+    pwr2 = pwr2 / size;
+    float16_t sq = riscv_dsp_sqrt_f16(pwr1 * pwr2);
+    float16_t out = 1.0f - dot / sq;
+    return out;
+}

@@ -2,7 +2,7 @@ Open source for Andes DSP library
 
 - User manual:
 
-   * docs/html/index.html
+   * docs/html/Andes_DSP_Library_User_Manual_UM179.html
 
 
 - How to build libdsp.a

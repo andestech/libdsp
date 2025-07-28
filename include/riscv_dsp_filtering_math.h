@@ -102,6 +102,16 @@ typedef struct
 } riscv_dsp_fir_q31_t;
 
 /**
+ * @brief Instance structure of the Q31 complex FIR filter.
+ */
+typedef struct
+{
+    uint32_t coeff_size;    /**< Number of coefficients */
+    q31_t *state;            /**< Pointer of the state vector whose size is <code>2 * (coeff_size + size - 1)</code> */
+    q31_t *coeff;            /**< Pointer of the time reversed coefficient vector whose size is <code>2 * coeff_size</code> */
+} riscv_dsp_cfir_q31_t;
+
+/**
  * @brief Instance structure of the Q15 FIR filter
  */
 typedef struct
@@ -188,6 +198,16 @@ void riscv_dsp_fir_f16(const riscv_dsp_fir_f16_t *instance, float16_t *src, floa
  */
 void riscv_dsp_fir_q31(const riscv_dsp_fir_q31_t *instance, q31_t *src,
                    q31_t *dst, uint32_t size);
+
+/**
+ * @brief Q31 complex FIR filter function
+ *
+ * @param[in] instance pointer of the instance structure
+ * @param[in] src pointer of the input vector
+ * @param[out] dst pointer of the output vector
+ * @param[in] size number of samples
+ */
+void riscv_dsp_cfir_q31(const riscv_dsp_cfir_q31_t * instance, q31_t * src, q31_t * dst, uint32_t size);
 
 /**
  * @brief Function for the q31 FIR filter.
@@ -392,6 +412,17 @@ void riscv_dsp_lfir_q31(const riscv_dsp_lfir_q31_t *instance, q31_t *src,
  * @{
  */
 /**
+ * @brief Structure for the f64 Decimator FIR Filters.
+ */
+typedef struct
+{
+    uint32_t M;             /**< decimation factor. */
+    uint32_t coeff_size;    /**< number of coefficients */
+    float64_t *coeff;       /**< pointer of the time reversed coefficient vector whose size is <code>coeff_size</code>. */
+    float64_t *state;       /**< pointer of the state vector whose size is <code>coeff_size + size - 1</code>. */
+} riscv_dsp_dcmfir_f64_t;
+
+/**
  * @brief Structure for the f32 Decimator FIR Filters.
  */
 typedef struct
@@ -423,6 +454,36 @@ typedef struct
     q31_t *coeff;        /**< pointer of the time reversed coefficient vector whose size is <code>coeff_size</code>. */
     q31_t *state;        /**< pointer of the state vector whose size is <code>coeff_size + size - 1</code>. */
 } riscv_dsp_dcmfir_q31_t;
+
+/**
+ * @brief double-precision floating-point decimator FIR filters function
+ *
+ * @param[in] instance pointer of the instance structure
+ * @param[in] src pointer of the input vector
+ * @param[out] dst pointer of the output vector
+ * @param[in] size number of samples
+ *
+ * @b Example
+ *     <pre>
+ * With the input size as 24, the decimation factor M as 4 and the filter coefficient
+ * size as 6, set the instance of the decimation FIR filter as:
+ *
+ *     \#define size       24
+ *     \#define M           4
+ *     \#define coeff_size  6
+ *     float64_t coeff[coeff_size] = {…};
+ *     float64_t state[coeff_size + size - 1];
+ *     riscv_dsp_dcmfir_f64_t inst = {M, coeff_size, coeff, state};
+ *     float64_t src[size] = {0.1, -0.2, 0.2, 0.3, 0.4, 0.1, …};
+ *     float64_t dst[size / M];
+ *     riscv_dsp_dcmfir_f64(&inst, src, dst, size);
+ *
+ * This example also serves as a reference for examples of Q31 or Q15 decimation FIR filter
+ * functions.
+ *     </pre>
+ */
+void riscv_dsp_dcmfir_f64(const riscv_dsp_dcmfir_f64_t *instance, float64_t *src,
+                      float64_t *dst, uint32_t size);
 
 /**
  * @brief single-precision floating-point decimator FIR filters function

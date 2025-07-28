@@ -109,6 +109,15 @@ float16_t riscv_dsp_dist_canberra_f16(const float16_t *src1, const float16_t *sr
 #endif
 
 /**
+ * @brief        Chebyshev distance between two f64 vectors
+ * @param[in]    src1         pointer of the first input vector
+ * @param[in]    src2         pointer of the second input vector
+ * @param[in]    size         size of elements in a vector
+ * @return Distance value
+ */
+float64_t riscv_dsp_dist_chebyshev_f64(const float64_t *src1, const float64_t *src2, uint32_t size);
+
+/**
  * @brief        Chebyshev distance between two f32 vectors
  * @param[in]    src1         pointer of the first input vector
  * @param[in]    src2         pointer of the second input vector
@@ -127,6 +136,15 @@ float32_t riscv_dsp_dist_chebyshev_f32(const float32_t *src1, const float32_t *s
  */
 float16_t riscv_dsp_dist_chebyshev_f16(const float16_t *src1, const float16_t *src2, uint32_t size);
 #endif
+
+/**
+ * @brief        Cityblock (Manhattan) distance between two f64 vectors
+ * @param[in]    src1         pointer of the first input vector
+ * @param[in]    src2         pointer of the second input vector
+ * @param[in]    size         size of elements in a vector
+ * @return Distance value
+ */
+float64_t riscv_dsp_dist_city_block_f64(const float64_t *src1, const float64_t *src2, uint32_t size);
 
 /**
  * @brief        Cityblock (Manhattan) distance between two f32 vectors
@@ -175,6 +193,15 @@ float16_t riscv_dsp_dist_corr_f16(const float16_t *src1, const float16_t *src2, 
  * @param[in]    size         size of elements in a vector
  * @return Distance value
  */
+float64_t riscv_dsp_dist_cos_f64(const float64_t *src1, const float64_t *src2, uint32_t size);
+
+/**
+ * @brief        Cosine distance between two f32 vectors
+ * @param[in]    src1         pointer of the first input vector
+ * @param[in]    src2         pointer of the second input vector
+ * @param[in]    size         size of elements in a vector
+ * @return Distance value
+ */
 float32_t riscv_dsp_dist_cos_f32(const float32_t *src1, const float32_t *src2, uint32_t size);
 
 #if defined (__riscv_zfh)
@@ -187,6 +214,15 @@ float32_t riscv_dsp_dist_cos_f32(const float32_t *src1, const float32_t *src2, u
  */
 float16_t riscv_dsp_dist_cos_f16(const float16_t *src1, const float16_t *src2, uint32_t size);
 #endif
+
+/**
+ * @brief        Euclidean distance between two f32 vectors
+ * @param[in]    src1         pointer of the first input vector
+ * @param[in]    src2         pointer of the second input vector
+ * @param[in]    size         size of elements in a vector
+ * @return Distance value
+ */
+float64_t riscv_dsp_dist_euclidean_f64(const float64_t *src1, const float64_t *src2, uint32_t size);
 
 /**
  * @brief        Euclidean distance between two f32 vectors

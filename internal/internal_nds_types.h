@@ -19,6 +19,7 @@
 
 #ifndef __INTERNAL_NDS_TYPES_H__
 #define __INTERNAL_NDS_TYPES_H__
+#include <stdlib.h>     //for malloc and free
 
 typedef int8_t              s8_t;
 typedef uint8_t             u8_t;
@@ -114,6 +115,8 @@ typedef union
 {
     s64_t d0;
     long_t l0;
+
+    f64_t dp0;
 
 #if ENA_DSP_BE
     //big endian
@@ -241,6 +244,13 @@ typedef union
     typedef union32u_t uuni_t;
 #endif
 
+#define NDSV_MALLOC malloc
+#define NDSV_FREE(p) \
+    do { \
+        free(p); \
+        p = 0; \
+    }while(0)
+
 #define NDSV_MIN(a,b) ((a)>(b)?(b):(a))
 #define NDSV_MAX(a,b) ((a)<(b)?(b):(a))
 // Type range limits
@@ -269,5 +279,8 @@ typedef union
 
 #define NDS_ABS_Q15(a) (a >= 0) ? a : ((a == INT16_MIN) ? INT16_MAX : -a);
 #define NDS_ABS_Q7(a) (a >= 0) ? a : ((a == INT8_MIN) ? INT8_MAX : -a);
+
+#define NDSV_OK ((int)0)
+#define NDSV_FAIL ((int)-1)
 
 #endif // __INTERNAL_NDS_TYPES_H__

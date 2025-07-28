@@ -41,7 +41,7 @@
 
 /**
  * @brief Function to implement the floating-point MFCC Functions
- * @param[in]       
+ * @param[in]
  */
 
 /* function description */
@@ -67,11 +67,11 @@ void riscv_dsp_mfcc_f32(const riscv_dsp_mfcc_f32_t * instance, float32_t *src, f
 
     riscv_dsp_rfft_f32(src, instance->log2_fft_len);
 
-    riscv_dsp_cmag_f32(src, src, (instance->fft_len>>1) + 1);
+    riscv_dsp_cmag_f32(src, src, (instance->fft_len >> 1) + 1);
 
     if (maxValue != 0.0f)
     {
-        riscv_dsp_scale_f32(src, maxValue, src, (instance->fft_len>>1) + 1);
+        riscv_dsp_scale_f32(src, maxValue, src, (instance->fft_len >> 1) + 1);
     }
 
     /* Apply MEL filters */
@@ -87,7 +87,7 @@ void riscv_dsp_mfcc_f32(const riscv_dsp_mfcc_f32_t * instance, float32_t *src, f
     riscv_dsp_offset_f32(buf, 1.0e-6f, buf, instance->n_mel_filters);
 
     // riscv_dsp_vlog_f32(buf, buf, instance->n_mel_filters);
-    for(uint32_t i=0;i<instance->n_mel_filters;i++)
+    for(uint32_t i = 0; i < instance->n_mel_filters; i++)
     {
         buf[i] = riscv_dsp_log_f32(buf[i]);
     }

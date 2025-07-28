@@ -272,6 +272,15 @@ q31_t riscv_dsp_atan2_q31(q31_t y, q31_t x);
  * @addtogroup sqrt
  * @{
  */
+
+/**
+ * @brief Square root of the single-precision floating-point input.
+ * @param[in]       src input value
+ * @return Square root of the input.
+ */
+float64_t riscv_dsp_sqrt_f64(float64_t src);
+
+
 /**
  * @brief Square root of the single-precision floating-point input.
  * @param[in]       src input value
@@ -605,6 +614,33 @@ void riscv_dsp_convert_f16_f32(float16_t *src, float32_t *dst, uint32_t size);
  */
 void riscv_dsp_convert_f16_q15(float16_t *src, q15_t *dst, uint32_t size);
 #endif
+
+/**
+ * @brief Convert a s8 vector to s16.
+ * @param[in]       src  pointer of the input vector
+ * @param[out]      dst  pointer of the output vector
+ * @param[in]       size number of elements in a vector
+ * @return none.
+ *
+ * @b Note:
+ *
+ * This function converts values from s8_t to s16_t
+ */
+void riscv_dsp_convert_s8_s16(s8_t *src, s16_t *dst, uint32_t size);
+
+/**
+ * @brief Convert a s16 vector to s8.
+ * @param[in]       src  pointer of the input vector
+ * @param[out]      dst  pointer of the output vector
+ * @param[in]       size number of elements in a vector
+ * @return none.
+ *
+ * @b Note:
+ *
+ * This function converts values from s16_t to s8_t
+ */
+void riscv_dsp_convert_s16_s8(s16_t *src, s8_t *dst, uint32_t size);
+
 /** @} convert */
 
 // Duplicate function
@@ -954,6 +990,11 @@ float16_t riscv_dsp_log_f16(float16_t src);
 #if defined (__riscv_zfh)
 void riscv_dsp_inv_f16(float16_t *src, float16_t *dst, uint32_t size);
 #endif
+
+/**
+ * This function used to get the lib version and sha-1
+ */
+char * get_version_libdsp(void);
 
 /** @} utils */
 

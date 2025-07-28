@@ -49,7 +49,7 @@
 
 /**
  * @brief Function to implement the Q15 MFCC Functions
- * @param[in]       
+ * @param[in]
  */
 /* function description */
 void riscv_dsp_mfcc_q15(const riscv_dsp_mfcc_q15_t * instance, q15_t *src, q15_t *dst, q31_t *buf)
@@ -57,7 +57,7 @@ void riscv_dsp_mfcc_q15(const riscv_dsp_mfcc_q15_t * instance, q15_t *src, q15_t
     q15_t *coefs = instance->filter_coefs;
     q15_t maxValue;
     q31_t logExponent;
-    uint32_t i, fftShift=0;
+    uint32_t i, fftShift = 0;
     q63_t result;
 
     /* Normalize */
@@ -67,7 +67,7 @@ void riscv_dsp_mfcc_q15(const riscv_dsp_mfcc_q15_t * instance, q15_t *src, q15_t
     {
         q15_t quotient;
         int16_t shift;
-        
+
         int status = riscv_dsp_divide_q15(ONE_Q15, maxValue, &quotient, &shift);
         if (status != 0)
         {
@@ -88,7 +88,7 @@ void riscv_dsp_mfcc_q15(const riscv_dsp_mfcc_q15_t * instance, q15_t *src, q15_t
 
     riscv_dsp_shift_q15(src, 2, src, instance->fft_len);
 
-    riscv_dsp_cmag_hp_q15(src, src, (instance->fft_len>>1) + 1);
+    riscv_dsp_cmag_hp_q15(src, src, (instance->fft_len >> 1) + 1);
 
     /* Apply MEL filters */
     for (i = 0; i < instance->n_mel_filters; i++)
@@ -106,11 +106,11 @@ void riscv_dsp_mfcc_q15(const riscv_dsp_mfcc_q15_t * instance, q15_t *src, q15_t
 
     if ((maxValue != 0) && (maxValue != ONE_Q15))
     {
-        riscv_dsp_scale_q31(buf, maxValue<<16, 0, buf, instance->n_mel_filters);
+        riscv_dsp_scale_q31(buf, maxValue << 16, 0, buf, instance->n_mel_filters);
     }
 
     /* Compute the log */
-    for(uint32_t i=0;i<instance->n_mel_filters;i++)
+    for(uint32_t i = 0; i < instance->n_mel_filters; i++)
     {
         buf[i] = riscv_dsp_log_q31(buf[i]);
     }
@@ -124,7 +124,7 @@ void riscv_dsp_mfcc_q15(const riscv_dsp_mfcc_q15_t * instance, q15_t *src, q15_t
     riscv_dsp_offset_q31(buf, logExponent, buf, instance->n_mel_filters);
     riscv_dsp_shift_q31(buf, -19, buf, instance->n_mel_filters);
 
-    for(i=0; i<instance->n_mel_filters; i++)
+    for(i = 0; i < instance->n_mel_filters; i++)
     {
         src[i] = NDS_ISA_SATS((q15_t)buf[i], 16);
     }

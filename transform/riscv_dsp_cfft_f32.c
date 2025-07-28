@@ -40,10 +40,19 @@
  * @return none
  */
 
+#ifdef ENA_FFT_RADIX8_F32
+extern int32_t riscv_dsp_cfft_rd8_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd8_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4_f32(float32_t *src, uint32_t m);
+#else
 extern int32_t riscv_dsp_cfft_rd2_f32(float32_t *src, uint32_t m);
 extern int32_t riscv_dsp_cfft_rd4_f32(float32_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_rd2_f32(float32_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_rd4_f32(float32_t *src, uint32_t m);
+#endif
+
+extern int32_t riscv_dsp_cifft_rd2_f32(float32_t *src, uint32_t m);
 
 void riscv_dsp_cfft_f32(float32_t *src, const uint32_t m)
 {
@@ -58,7 +67,11 @@ void riscv_dsp_cfft_f32(float32_t *src, const uint32_t m)
         riscv_dsp_cfft_rd4_f32(src, m);
         break;
     default :
+#ifdef ENA_FFT_RADIX8_F32
+        riscv_dsp_cfft_rd8_f32(src, m);
+#else
         riscv_dsp_cfft_rd2_f32(src, m);
+#endif
         break;
     }
 }
@@ -76,7 +89,11 @@ void riscv_dsp_cifft_f32(float32_t *src, const uint32_t m)
         riscv_dsp_cifft_rd4_f32(src, m);
         break;
     default :
+#ifdef ENA_FFT_RADIX8_F32
+        riscv_dsp_cifft_rd8_f32(src, m);
+#else
         riscv_dsp_cifft_rd2_f32(src, m);
+#endif
         break;
     }
 }

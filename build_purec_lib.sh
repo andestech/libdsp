@@ -43,6 +43,15 @@ CC="$COMPILER_NAME"
 AR="$PREFIX-ar"
 DEFINE_RES_LOG=10
 
+## Check bash verion to decide parallel building
+REQ_BASH_MAJOR=5
+BASH_MAJOR=`bash --version | head -n1 | cut -d' ' -f4 | cut -d'.' -f1`
+PARALLEL_BUILD="false"
+if { [ $BASH_MAJOR -gt $REQ_BASH_MAJOR ] || [ $BASH_MAJOR -eq $REQ_BASH_MAJOR ]; } then
+    PARALLEL_BUILD="true"
+fi
+echo "[INFO] Parallel building': $PARALLEL_BUILD" >> ${BUILD_LOG}
+
 # automatically enable the zfh extension if the toolcahin supports it
 ${CC} ${BUILD_FLAGS} -mzfh -E -dM - < /dev/null  &> /dev/null
 if [ "$?" == "0" ];then
@@ -56,16 +65,40 @@ source ${LIB_ROOT}/source_file_list
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 rm  -rf *.o libdsp.a
-for FUNC_NAME in $FUNCTION_LIST
-    do
-        C_NAME="`echo $FUNC_NAME | rev | cut -d '/' -f1 | rev | cut -d '.' -f1`"
-        echo "${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${LIB_ROOT}/${FUNC_NAME}" >> ${BUILD_LOG}
-        ${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${LIB_ROOT}/${FUNC_NAME}
-        if [ "$?" != "0" ]; then
-            log "${C_NAME}.o build fail"
-            exit
+
+if [ $PARALLEL_BUILD == "true" ]; then
+    N=16
+    for FUNC_NAME in $FUNCTION_LIST
+        do
+        {
+            C_NAME="`echo $FUNC_NAME | rev | cut -d '/' -f1 | rev | cut -d '.' -f1`"
+            echo "${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${LIB_ROOT}/${FUNC_NAME}" >> ${BUILD_LOG}
+            ${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${LIB_ROOT}/${FUNC_NAME}
+            if [ "$?" != "0" ]; then
+                log "${C_NAME}.o build fail"
+                exit
+            fi
+        } &
+        if [[ $(jobs -r -p | wc -l) -ge $N ]]; then
+            wait -n
         fi
-    done
+        done
+else
+    for FUNC_NAME in $FUNCTION_LIST
+        do
+            C_NAME="`echo $FUNC_NAME | rev | cut -d '/' -f1 | rev | cut -d '.' -f1`"
+            echo "${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${LIB_ROOT}/${FUNC_NAME}" >> ${BUILD_LOG}
+            ${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${LIB_ROOT}/${FUNC_NAME}
+            if [ "$?" != "0" ]; then
+                log "${C_NAME}.o build fail"
+                exit
+            fi
+        done
+fi
+
+# no more jobs to be started but wait for pending jobs
+# (all need to be finished)
+wait
 
 log "" >> ${BUILD_LOG}
 ALL_OBJ_FILES=`ls *.o`

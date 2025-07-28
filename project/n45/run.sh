@@ -4,7 +4,7 @@ ENA_ACCURACY=1
 ENA_PERF=0
 ENA_LDSP=0
 ENA_DEBUG=0
-ENA_FPGA=2
+ENA_FPGA=1
 ## you can check item in ../test_list, for accuracy test
 UNIT_TEST_FUNC=""
 ## you can check item in gen_perf_benchmarks.sh, for perf test

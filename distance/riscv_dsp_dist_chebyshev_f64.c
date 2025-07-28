@@ -16,37 +16,40 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  ******************************************************************************/
-#ifndef __RISCV_DSP_MATH_TYPES_H__
-#define __RISCV_DSP_MATH_TYPES_H__
-#ifdef  __cplusplus
-extern "C"
+
+#include <config.h>
+#include <math.h>
+
+/**
+ * @brief        Chebyshev distance between two vectors
+ * @param[in]    src1         First vector
+ * @param[in]    src2         Second vector
+ * @param[in]    size         vector length
+ * @return distance
+ *
+ */
+FUNC_ATTR_FFAST_MATH
+float64_t riscv_dsp_dist_chebyshev_f64(const float64_t * FUNC_RESTRICT src1, const float64_t * FUNC_RESTRICT src2, uint32_t size)
 {
-#endif
+    float64_t tmp1, tmp2, max, diff;
 
-#include <stdint.h>
+    tmp1 = *src1++;
+    tmp2 = *src2++;
+    diff = fabs(tmp1 - tmp2);
+    max = diff;
+    size--;
 
-typedef int8_t    q7_t;
-typedef uint8_t   u8_t;
-typedef int8_t    s8_t;
-typedef int16_t   q15_t;
-typedef uint16_t  u16_t;
-typedef int16_t   s16_t;
-typedef int32_t   q31_t;
-typedef uint32_t  u32_t;
-typedef int64_t   q63_t;
-typedef uint64_t  u64_t;
-typedef float     float32_t;
-typedef double    float64_t;
-
-#if defined (__riscv_zfh)
-typedef _Float16    float16_t;
-#endif
-
-#if defined (__riscv_zfbfmin)
-typedef __bf16    bf16_t;
-#endif
-
-#ifdef  __cplusplus
+    while (size != 0)
+    {
+        tmp1 = *src1++;
+        tmp2 = *src2++;
+        diff = fabs(tmp1 - tmp2);
+        max = (diff > max) ? diff : max;
+        size--;
+    }
+    return max;
 }
-#endif
-#endif // __RISCV_DSP_MATH_TYPES_H__
+
+/**
+ * @} end of groupSVM group
+ */

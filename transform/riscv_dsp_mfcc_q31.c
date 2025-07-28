@@ -49,15 +49,15 @@
 
 /**
  * @brief Function to implement the Q31 MFCC Functions
- * @param[in]       
+ * @param[in]
  */
 /* function description */
 void riscv_dsp_mfcc_q31(const riscv_dsp_mfcc_q31_t * instance, q31_t *src, q31_t *dst, q31_t *buf)
 {
-    
+
     q31_t *coefs = instance->filter_coefs;
     q31_t maxValue, logExponent;
-    uint32_t i, fftShift=0;
+    uint32_t i, fftShift = 0;
     q63_t result;
 
     /* Normalize */
@@ -67,7 +67,7 @@ void riscv_dsp_mfcc_q31(const riscv_dsp_mfcc_q31_t * instance, q31_t *src, q31_t
     {
         q31_t quotient;
         int16_t shift;
-        
+
         int status = riscv_dsp_divide_q31(ONE_Q31, maxValue, &quotient, &shift);
         if (status != 0)
         {
@@ -84,7 +84,7 @@ void riscv_dsp_mfcc_q31(const riscv_dsp_mfcc_q31_t * instance, q31_t *src, q31_t
     riscv_dsp_rfft_q31(src, instance->log2_fft_len);
     riscv_dsp_shift_q31(src, 2, src, instance->fft_len);
 
-    riscv_dsp_cmag_q31(src, src, (instance->fft_len>>1) + 1);
+    riscv_dsp_cmag_q31(src, src, (instance->fft_len >> 1) + 1);
 
     /* Apply MEL filters */
     for (i = 0; i < instance->n_mel_filters; i++)
@@ -106,7 +106,7 @@ void riscv_dsp_mfcc_q31(const riscv_dsp_mfcc_q31_t * instance, q31_t *src, q31_t
     }
 
     /* Compute the log */
-    for(uint32_t i=0;i<instance->n_mel_filters;i++)
+    for(uint32_t i = 0; i < instance->n_mel_filters; i++)
     {
         buf[i] = riscv_dsp_log_q31(buf[i]);
     }
@@ -119,7 +119,7 @@ void riscv_dsp_mfcc_q31(const riscv_dsp_mfcc_q31_t * instance, q31_t *src, q31_t
     // q5.26
     riscv_dsp_offset_q31(buf, logExponent, buf, instance->n_mel_filters);
     riscv_dsp_shift_q31(buf, -3, buf, instance->n_mel_filters);
-    
+
     // q8.23
     /* Multiply with the DCT matrix */
     riscv_dsp_mat_mul_mxv_q31(instance->dct_coefs, buf, dst, instance->n_dct_out, instance->n_mel_filters);

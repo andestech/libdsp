@@ -189,6 +189,8 @@ FILTER_NAME="
     filtering/riscv_dsp_fir_f64.c \
     filtering/riscv_dsp_levinson_durbin_f32.c \
     filtering/riscv_dsp_levinson_durbin_q31.c \
+    filtering/riscv_dsp_dcmfir_f64.c \
+    filtering/riscv_dsp_cfir_q31.c
     "
 
 if [ "$ENA_FP16" == "1" ]; then
@@ -237,6 +239,10 @@ DIST_NAME="
     distance/riscv_dsp_dtw_distance_f32.c \
     distance/riscv_dsp_dtw_path_f32.c \
     distance/riscv_dsp_dtw_init_window_q7.c \
+    distance/riscv_dsp_dist_chebyshev_f64.c \
+    distance/riscv_dsp_dist_city_block_f64.c \
+    distance/riscv_dsp_dist_cos_f64.c \
+    distance/riscv_dsp_dist_euclidean_f64.c \
     "
 
 if [ "$ENA_FP16" == "1" ]; then
@@ -404,6 +410,10 @@ else
     fi
 fi
 
+if [ "$ENA_FFT_RADIX8" == "1" ]; then
+    UTILS_TABLE="$UTILS_TABLE utils/table/riscv_dsp_reversal_table_rd8.c"
+fi
+
 UTILS_NAME="
     utils/riscv_dsp_dup_q15.c \
     utils/riscv_dsp_cos_q31.c \
@@ -456,9 +466,12 @@ UTILS_NAME="
     utils/riscv_dsp_convert_q31_f64.c \
     utils/riscv_dsp_convert_q15_f64.c \
     utils/riscv_dsp_convert_q7_f64.c \
+    utils/riscv_dsp_convert_s8_s16.c \
+    utils/riscv_dsp_convert_s16_s8.c \
     utils/riscv_dsp_dup_f64.c \
     utils/riscv_dsp_set_f64.c \
     utils/riscv_dsp_exp_f64.c \
+    utils/riscv_dsp_sqrt_f64.c \
     "
 
 if [ "$ENA_FP16" == "1" ]; then
@@ -711,6 +724,11 @@ TRANS_NAME="
     transform/riscv_dsp_mfcc_q15.c
     "
 
+if [ "$ENA_FFT_RADIX8" == "1" ]; then
+    TRANS_NAME="$TRANS_NAME transform/riscv_dsp_cfft_rd8_f32.c"
+fi
+
+
 if [ "$ENA_FP16" == "1" ]; then
     TRANS_NAME="$TRANS_NAME transform/riscv_dsp_cfft_f16.c \
     transform/riscv_dsp_cfft_rd2_f16.c \
@@ -806,11 +824,16 @@ QUATERNION_NAME="
     quaternion/riscv_dsp_quaternion_product_f32.c \
     "
 
+IMAGE_NAME="
+    image/riscv_dsp_img_resize_bilinear_rgb_u8.c \
+    image/riscv_dsp_img_cvtColor_u8.c \
+"
+
 FUNCTION_LIST="$BASIC_NAME $CMPLX_NAME $FILTER_NAME $SVM_NAME $DIST_NAME $CONTROL_NAME \
                $UTILS_NAME $UTILS_TABLE $STATISTICS_NAME $MAT_NAME $TRANS_NAME $TRANS_NO_COVERAGE \
-               $SORT_NAME $INTERP_NAME nds_version.c $WINDOW_NAME $QUATERNION_NAME"
+               $SORT_NAME $INTERP_NAME nds_version.c $WINDOW_NAME $QUATERNION_NAME $IMAGE_NAME"
 UN_LIST="$BASIC_NAME $CMPLX_NAME $FILTER_NAME $SVM_NAME $DIST_NAME $CONTROL_NAME \
-               $UTILS_NAME $UTILS_TABLE $STATISTICS_NAME $MAT_NAME $TRANS_NAME $SORT_NAME $INTERP_NAME $WINDOW_NAME $QUATERNION_NAME"
+               $UTILS_NAME $UTILS_TABLE $STATISTICS_NAME $MAT_NAME $TRANS_NAME $SORT_NAME $INTERP_NAME $WINDOW_NAME $QUATERNION_NAME $IMAGE_NAME"
 
 COVERAGE_LIST="$BASIC_NAME $CMPLX_NAME $FILTER_NAME $SVM_NAME $DIST_NAME  \
-               $UTILS_NAME $STATISTICS_NAME $MAT_NAME $TRANS_NAME $SORT_NAME $INTERP_NAME $WINDOW_NAME $QUATERNION_NAME"
+               $UTILS_NAME $STATISTICS_NAME $MAT_NAME $TRANS_NAME $SORT_NAME $INTERP_NAME $WINDOW_NAME $QUATERNION_NAME $IMAGE_NAME"

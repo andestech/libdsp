@@ -16,37 +16,33 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  ******************************************************************************/
-#ifndef __RISCV_DSP_MATH_TYPES_H__
-#define __RISCV_DSP_MATH_TYPES_H__
-#ifdef  __cplusplus
-extern "C"
+
+#include <config.h>
+#include "internal_isa.h"
+
+/**
+ * @ingroup utils
+ */
+
+/**
+ * @defgroup converts8 Convert s8 vector
+ *
+ * Convert a s8 vector.
+ */
+
+/**
+ * @addtogroup converts8
+ * @{
+ */
+void riscv_dsp_convert_s8_s16(s8_t * FUNC_RESTRICT src, s16_t * FUNC_RESTRICT dst, uint32_t size)
 {
-#endif
-
-#include <stdint.h>
-
-typedef int8_t    q7_t;
-typedef uint8_t   u8_t;
-typedef int8_t    s8_t;
-typedef int16_t   q15_t;
-typedef uint16_t  u16_t;
-typedef int16_t   s16_t;
-typedef int32_t   q31_t;
-typedef uint32_t  u32_t;
-typedef int64_t   q63_t;
-typedef uint64_t  u64_t;
-typedef float     float32_t;
-typedef double    float64_t;
-
-#if defined (__riscv_zfh)
-typedef _Float16    float16_t;
-#endif
-
-#if defined (__riscv_zfbfmin)
-typedef __bf16    bf16_t;
-#endif
-
-#ifdef  __cplusplus
+    while (size != 0u)
+    {
+        *dst++ = (s16_t)*src++;
+        size--;
+    }
 }
-#endif
-#endif // __RISCV_DSP_MATH_TYPES_H__
+
+/**
+ * @} end of converts8
+ */

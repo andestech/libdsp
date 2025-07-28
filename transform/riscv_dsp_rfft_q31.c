@@ -24,6 +24,7 @@
 extern int32_t riscv_dsp_cfft_q31(q31_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_q31(q31_t *src, uint32_t m);
 
+extern int32_t riscv_dsp_cfft_q31_noscale(q31_t *src, uint32_t m);
 /**
  * @ingroup transform
  */
@@ -59,6 +60,9 @@ int32_t riscv_dsp_rfft_q31(q31_t *src, uint32_t m)
     q31_t c, s;
     q63_t xt1, yt1;
     q63_t xt2, xt3, yt2, yt3;
+#ifndef RFFT_Q_ORIG
+    q63_t tmp_neg;
+#endif
     unsigned int n;
     n = 1 << m;
 
@@ -82,6 +86,7 @@ int32_t riscv_dsp_rfft_q31(q31_t *src, uint32_t m)
 #else
         GET_COS_SIN_VALUES(i, c, s, m, q31);
 #endif /* FFT_LOGN > RES_LOGN */
+#ifdef RFFT_Q_ORIG
         xt1 = (ptr[2 * i] + ptr[2 * j]) >> 2;
         xt2 = (ptr[2 * i] - ptr[2 * j]);
         yt1 = (ptr[2 * i + 1] + ptr[2 * j + 1]);
@@ -100,6 +105,30 @@ int32_t riscv_dsp_rfft_q31(q31_t *src, uint32_t m)
         ptr[2 * i + 1] = (yt3 + yt2);
         ptr[2 * j] = (xt1 - xt3);
         ptr[2 * j + 1] = (yt3 - yt2);
+
+#else //RFFT_Q_ORIG
+        // for pureC or RV32P
+        // Aligned the output between RVP and pureC
+        xt1 = (ptr[2 * i] + ptr[2 * j]) >> 1;
+        xt2 = (ptr[2 * i] - ptr[2 * j]);
+        yt1 = (ptr[2 * i + 1] + ptr[2 * j + 1]);
+        yt2 = (ptr[2 * i + 1] - ptr[2 * j + 1]) >> 1;
+        tmp_neg = (ptr[2 * j + 1] - ptr[2 * i + 1]) >> 1;
+        /* twiddle and butterfly */
+
+#ifdef ENA_HIGHER_PERFORMANCE
+        xt3 = ((q31_t)(((q63_t) yt1 * c) >> 32) - (q31_t)(((q63_t) xt2 * s) >> 32)) >> 1;
+        yt3 = -(((q31_t)(((q63_t) xt2 * c) >> 32) + (q31_t)(((q63_t) yt1 * s) >> 32)) >> 1);
+#else
+        xt3 = ((yt1 * c - xt2 * s)) >> 32;
+        yt3 = -((xt2 * c + yt1 * s) >> 32);
+#endif
+        ptr[2 * i] = (xt1 + xt3) >> 1;
+        ptr[2 * i + 1] = (yt3 + yt2) >> 1 ;
+        ptr[2 * j] = -(xt3 - xt1) >> 1 ;
+        //ptr[2 * j + 1] = (yt3 - yt2) >> 1 ;
+        ptr[2 * j + 1] = (yt3 + tmp_neg) >> 1 ;
+#endif //RFFT_Q_ORIG
         j++;
         i--;
     }
@@ -167,6 +196,68 @@ int32_t riscv_dsp_rifft_q31(q31_t *src, uint32_t m)
 
     return 0;
 }
+
+// this function is only for dct / idct to keep the q-format
+int32_t riscv_dsp_rfft_q31_noscale(q31_t *src, uint32_t m)
+{
+
+    register unsigned int i, j;
+    q31_t c, s;
+    q63_t xt1, yt1;
+    q63_t xt2, xt3, yt2, yt3;
+    unsigned int n;
+    n = 1 << m;
+
+    /* Main loop */
+#if FFT_LOGN > RES_LOGN
+    q31_t p;
+    p = riscv_dsp_recip_table_q31[m - 2]; /* 2 / FFT_N */
+#endif
+
+    riscv_dsp_cfft_q31_noscale(src, m - 1);
+
+    /* post-processing */
+    q31_t *ptr = src;
+
+    /* for rFFT */
+    i = j = n >> 2;
+    while (i != 0)
+    {
+#if FFT_LOGN > RES_LOGN
+        GET_COS_SIN_VALUES(i, c, s, p, q31);
+#else
+        GET_COS_SIN_VALUES(i, c, s, m, q31);
+#endif /* FFT_LOGN > RES_LOGN */
+        xt1 = (ptr[2 * i] + ptr[2 * j]) ;
+        xt2 = (ptr[2 * i] - ptr[2 * j]) ;
+        yt1 = (ptr[2 * i + 1] + ptr[2 * j + 1]) ;
+        yt2 = (ptr[2 * i + 1] - ptr[2 * j + 1]) ;
+
+        /* twiddle and butterfly */
+
+#ifdef ENA_HIGHER_PERFORMANCE
+        xt3 = ((q31_t)(((q63_t) yt1 * c) >> 31) - (q31_t)(((q63_t) xt2 * s) >> 31)) ;
+        yt3 = -(((q31_t)(((q63_t) xt2 * c) >> 31) + (q31_t)(((q63_t) yt1 * s) >> 31)));
+#else
+        xt3 = ((yt1 * c - xt2 * s)) >> 31;
+        yt3 = -((xt2 * c + yt1 * s) >> 31);
+#endif
+        ptr[2 * i] = (xt1 + xt3) >> 1;
+        ptr[2 * i + 1] = (yt3 + yt2) >> 1;
+        ptr[2 * j] = (xt1 - xt3) >> 1;
+        ptr[2 * j + 1] = (yt3 - yt2) >> 1;
+        j++;
+        i--;
+    }
+
+    xt1 = ptr[0];
+    ptr[0] = (xt1 + ptr[1]) ;
+    ptr[1] = (xt1 - ptr[1]) ;
+
+    return 0;
+
+}
+
 
 /**
  * @} end of rfft

@@ -24,6 +24,7 @@
 extern int32_t riscv_dsp_cfft_q15(q15_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_q15(q15_t *src, uint32_t m);
 
+extern int32_t riscv_dsp_cfft_q15_noscale(q15_t *src, uint32_t m);
 /**
  * @ingroup transform
  */
@@ -81,6 +82,7 @@ int32_t riscv_dsp_rfft_q15(q15_t *src, uint32_t m)
 #else
         GET_COS_SIN_VALUES(i, c, s, m, q15);
 #endif /* FFT_LOGN > RES_LOGN */
+#ifdef RFFT_Q_ORIG
         xt1 = (ptr[2 * i] + ptr[2 * j]) >> 2;
         xt2 = (ptr[2 * i] - ptr[2 * j]);
         yt1 = (ptr[2 * i + 1] + ptr[2 * j + 1]);
@@ -93,6 +95,22 @@ int32_t riscv_dsp_rfft_q15(q15_t *src, uint32_t m)
         ptr[2 * i + 1] = (yt3 + yt2);
         ptr[2 * j] = (xt1 - xt3);
         ptr[2 * j + 1] = (yt3 - yt2);
+#else
+// modify the algorithm to align the output with RVP
+        xt1 = (ptr[2 * i] +  ptr[2 * j]) >> 1;
+        xt2 = (ptr[2 * i] -  ptr[2 * j]) >> 1;
+        yt1 = (ptr[2 * i + 1] + ptr[2 * j + 1]) >> 1;
+        yt2 = (ptr[2 * i + 1] - ptr[2 * j + 1]) >> 1;
+
+        xt3 = (yt1 * c - xt2 * s) >> 15;
+        yt3 = -((xt2 * c + yt1 * s) >> 15);
+
+        ptr[2 * i] = (xt1 + xt3) >> 1;
+        ptr[2 * i + 1] = (yt3 + yt2) >> 1;
+        ptr[2 * j] = (xt1 - xt3) >> 1;
+        ptr[2 * j + 1] = -((yt2 - yt3) >> 1);
+
+#endif //RFFT_Q_ORIG
         j++;
         i--;
     }
@@ -153,6 +171,61 @@ int32_t riscv_dsp_rifft_q15(q15_t *src, uint32_t m)
 
     return 0;
 }
+
+// this function is only for dct / idct to keep the q-format
+int32_t riscv_dsp_rfft_q15_noscale(q15_t *src, uint32_t m)
+{
+    register unsigned int i, j;
+    q15_t c, s;
+    q31_t xt1, xt2, xt3, yt1, yt2, yt3;
+    unsigned int n;
+    n = 1 << m;
+
+    /* Main loop */
+#if FFT_LOGN > RES_LOGN
+    q15_t p;
+    p = riscv_dsp_recip_table_q15[m - 2]; /* 2 / FFT_N */
+#endif
+
+    riscv_dsp_cfft_q15_noscale(src, m - 1);
+
+    /* post-processing */
+    q15_t *ptr = src;
+
+    /* for rFFT */
+    i = j = n >> 2;
+    while (i != 0)
+    {
+#if FFT_LOGN > RES_LOGN
+        GET_COS_SIN_VALUES(i, c, s, p, q15);
+#else
+        GET_COS_SIN_VALUES(i, c, s, m, q15);
+#endif /* FFT_LOGN > RES_LOGN */
+        // rvp bug-fiexed , aligned the output with rvp
+        xt1 = (ptr[2 * i] + ptr[2 * j]) >> 1;
+        xt2 = (ptr[2 * i] - ptr[2 * j]);
+        yt1 = (ptr[2 * i + 1] + ptr[2 * j + 1]);
+        yt2 = (ptr[2 * i + 1] - ptr[2 * j + 1]) >> 1;
+
+        /* twiddle and butterfly */
+        xt3 = (yt1 * c - xt2 * s) >> 16;
+        yt3 = -((xt2 * c + yt1 * s) >> 16);
+        ptr[2 * i] = (xt1 + xt3 );
+        ptr[2 * i + 1] = (yt3 + yt2 );
+        ptr[2 * j] = (xt1 - xt3 );
+        ptr[2 * j + 1] = -((yt2 - yt3 )) ;
+        j++;
+        i--;
+    }
+
+    xt1 = ptr[0];
+    ptr[0] = (xt1 >> 0) + (ptr[1] >> 0);
+    ptr[1] = (xt1 >> 0) - (ptr[1] >> 0);
+
+    return 0;
+}
+
+
 
 /**
  * @} end of rfft

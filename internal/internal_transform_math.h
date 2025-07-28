@@ -23,10 +23,23 @@
  * @defgroup transform Transform Functions
  */
 
+
+#ifdef ENA_FFT_RADIX8
+#define ENA_FFT_RADIX8_F32
+#endif
+
 #include "internal_math_types.h"
 #include "internal_utils_math.h"        // for cos/sin tables
 #include "riscv_dsp_utils_math.h"
 #include "internal_isa.h"
+
+#ifdef ENA_FFT_RADIX8
+extern uint16_t bitRevIndexTable16[21];
+extern uint16_t bitRevIndexTable32[49];
+extern uint16_t bitRevIndexTable128[209];
+extern uint16_t bitRevIndexTable256[441];
+extern uint16_t bitRevIndexTable1024[1801];
+#endif
 
 // DCT Coefficient
 #define DCT_COEF0_F32   0.707106781186548f  // 1.0f / sqrt(2)
@@ -128,6 +141,7 @@
             }                                           \
             else                                        \
             {                                           \
+                k -= TRANSFORM_MATH_RAD90;              \
                 *c = ptr[TRANSFORM_MATH_RAD90 - k];     \
                 *s = -ptr[k];                           \
             }                                           \

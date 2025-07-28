@@ -43,6 +43,10 @@ extern int32_t riscv_dsp_cfft_rd4_q31(q31_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_rd2_q31(q31_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_rd4_q31(q31_t *src, uint32_t m);
 
+extern int32_t riscv_dsp_cfft_rd2_q31_noscale(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_q31_noscale(q31_t *src, uint32_t m);
+
+
 void riscv_dsp_cfft_q31(q31_t *src, uint32_t m)
 {
     switch (m)
@@ -89,6 +93,29 @@ void riscv_dsp_cifft_q31(q31_t *src, uint32_t m)
         break;
     }
 }
+
+
+void riscv_dsp_cfft_q31_noscale(q31_t *src, uint32_t m)
+{
+
+    switch (m)
+    {
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cfft_rd4_q31_noscale(src, m);
+        break;
+    default :
+        riscv_dsp_cfft_rd2_q31_noscale(src, m);
+        break;
+    }
+
+}
+
+
 /**
  * @} end of cfft
  */

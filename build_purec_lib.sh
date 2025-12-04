@@ -34,14 +34,26 @@ fi
 log "=================================================="
 
 PREFIX=`echo ${COMPILER_NAME} | rev | cut -d "-" -f1 --complement | rev`
+DEFINE_RES_LOG=10
+ENA_FFT_RADIX8=1
+ENA_FFT_RADIX4BY2=1
+ENA_SMALL_FFT_INDV=1    # 1: 4/8 pts cfft using indivial functions
 
 BUILD_DIR="build_dir"
 C_FLAGS="-O3 -DRES_LOGN=10 -ffunction-sections -fdata-sections -Wall -Wextra -Werror -DHERMITE_INTERPOLATION"
+if [ "$ENA_FFT_RADIX8" == "1" ]; then
+    C_FLAGS="$C_FLAGS -DENA_FFT_RADIX8"
+fi
+if [ "$ENA_FFT_RADIX4BY2" == "1" ]; then
+    C_FLAGS="$C_FLAGS -DENA_FFT_RADIX4BY2_Q15 -DENA_FFT_RADIX4BY2_Q31"
+fi
+if [ "$ENA_SMALL_FFT_INDV" == "1" ]; then
+    C_FLAGS="$C_FLAGS -DSMALL_FFT_INDV_FUNC"
+fi
 BUILD_FLAGS="$C_FLAGS $EXTRA_FLAGS"
 INCLUDE="-I${LIB_ROOT}/include -I${LIB_ROOT}/internal"
 CC="$COMPILER_NAME"
 AR="$PREFIX-ar"
-DEFINE_RES_LOG=10
 
 ## Check bash verion to decide parallel building
 REQ_BASH_MAJOR=5
@@ -64,6 +76,7 @@ source ${LIB_ROOT}/source_file_list
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
+BUILD_DIR=`pwd`
 rm  -rf *.o libdsp.a
 
 if [ $PARALLEL_BUILD == "true" ]; then
@@ -108,8 +121,8 @@ log "build libdsp.a sucess"
 log "    lib: ${BUILD_DIR}/libdsp.a"
 log "    build log: build_lib.log"
 log "=================================================="
-cd ${LIB_ROOT}
+cd ${LIB_ROOT}/example
 log "Demo: riscv_dsp_add_f32"
-log "    ${CC} ${BUILD_FLAG} -I./include/ -o demo.adx demo.c ${BUILD_DIR}/libdsp.a"
-${CC} ${BUILD_FLAG} -I./include/ -o demo.adx demo.c ${BUILD_DIR}/libdsp.a
+log "    ${CC} ${BUILD_FLAG} -I./../include/ -o demo.adx demo.c ${BUILD_DIR}/libdsp.a"
+${CC} ${BUILD_FLAG} -I./../include/ -o demo.adx demo.c ${BUILD_DIR}/libdsp.a
 log "=================================================="

@@ -19,6 +19,7 @@
 
 #include <config.h>
 #include "internal_filtering_math.h"
+#define UNROLL4
 
 /**
  * @ingroup filtering
@@ -98,6 +99,77 @@ void FUNC_ATTR_NO_HWLOOP
 riscv_dsp_dcmfir_f32(const riscv_dsp_dcmfir_f32_t * FUNC_RESTRICT instance, float32_t * FUNC_RESTRICT src,
                float32_t * FUNC_RESTRICT dst, uint32_t size)
 {
+#ifdef UNROLL4
+    float32_t *state = instance->state;
+    float32_t *scurr, *px, *pb;
+    float32_t sum, sum2, sum3, sum4;
+    float32_t x0, c0, x2, c2;
+    float32_t x1, c1, x3, c3;
+    uint32_t csize = instance->coeff_size;
+    uint32_t i, tapcnt, blkcnt, bsize = size / instance->M;
+
+    scurr = instance->state + (csize - 1u);
+
+    blkcnt = bsize;
+    while (blkcnt != 0u)
+    {
+        //LOOP_HINT_NO_HWLOOP();
+        i = instance->M;
+        while (i)
+        {
+            *scurr++ = *src++;
+            i--;
+        }
+
+        sum = 0.0f;
+        sum2 = 0.0f;
+        sum3 = 0.0f;
+        sum4 = 0.0f;
+        px = state;
+        pb = instance->coeff;
+
+        tapcnt = csize;
+        while (tapcnt > 3u)
+        {
+            c0 = *pb++;
+            x0 = *px++;
+            c1 = *pb++;
+            x1 = *px++;
+            c2 = *pb++;
+            x2 = *px++;
+            c3 = *pb++;
+            x3 = *px++;
+            sum += (x0 * c0);
+            sum2 += (x1 * c1);
+            sum3 += (x2 * c2);
+            sum4 += (x3 * c3);
+            tapcnt -= 4;
+        }
+        tapcnt = csize & 3;
+        while (tapcnt > 0)
+        {
+            c0 = *pb++;
+            x0 = *px++;
+            sum += (x0 * c0);
+            tapcnt --;
+        }
+        sum = sum + sum2 + sum3 + sum4;
+
+        state = state + instance->M;
+        *dst++ = sum;
+        blkcnt--;
+    }
+
+    scurr = instance->state;
+
+    i = (csize - 1u);
+    while (i != 0u)
+    {
+        //LOOP_HINT_NO_HWLOOP();
+        *scurr++ = *state++;
+        i--;
+    }
+#else
     float32_t *state = instance->state;
     float32_t *scurr, *px, *pb;
     float32_t sum;
@@ -156,6 +228,7 @@ riscv_dsp_dcmfir_f32(const riscv_dsp_dcmfir_f32_t * FUNC_RESTRICT instance, floa
         *scurr++ = *state++;
         i--;
     }
+#endif // UNROLL4
 }
 
 /**

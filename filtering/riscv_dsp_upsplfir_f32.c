@@ -19,7 +19,7 @@
 
 #include <config.h>
 #include "internal_filtering_math.h"
-
+#define UNROLL2
 /**
  * @ingroup filtering
  */
@@ -116,13 +116,32 @@ riscv_dsp_upsplfir_f32(const riscv_dsp_upsplfir_f32_t * FUNC_RESTRICT instance, 
             pb = instance->coeff + i;
 
             tapcnt = plen;
+#ifdef UNROLL2
+            float32_t sum2 = 0.0f;
+            while (tapcnt > 1u)
+            {
+                sum += *px++ **pb;
+                pb += instance->L;
+                sum2 += *px++ **pb;
+                pb += instance->L;
+                tapcnt -= 2;
+            }
+
+            while (tapcnt > 0u)
+            {
+                sum += *px++ **pb;
+                pb += instance->L;
+                tapcnt --;
+            }
+            sum = sum + sum2;
+#else
             while (tapcnt != 0u)
             {
                 sum += *px++ **pb;
                 pb += instance->L;
                 tapcnt--;
             }
-
+#endif
             *dst++ = sum;
             i--;
         }
@@ -131,13 +150,32 @@ riscv_dsp_upsplfir_f32(const riscv_dsp_upsplfir_f32_t * FUNC_RESTRICT instance, 
         pb = instance->coeff;
 
         tapcnt = plen;
+#ifdef UNROLL2
+        float32_t sum2 = 0.0f;
+        while (tapcnt > 1u)
+        {
+            sum += *px++ **pb;
+            pb += instance->L;
+            sum2 += *px++ **pb;
+            pb += instance->L;
+            tapcnt -= 2;
+        }
+
+        while (tapcnt > 0u)
+        {
+            sum += *px++ **pb;
+            pb += instance->L;
+            tapcnt --;
+        }
+        sum = sum + sum2;
+#else
         while (tapcnt != 0u)
         {
             sum += *px++ **pb;
             pb += instance->L;
             tapcnt--;
         }
-
+#endif
         *dst++ = sum;
 
         state = state + 1;

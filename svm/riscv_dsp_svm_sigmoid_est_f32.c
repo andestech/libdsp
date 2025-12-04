@@ -20,6 +20,7 @@
 #include <config.h>
 #include "internal_svm_math.h"
 #include "math.h"
+#define UNROLL
 
 /**
  * @ingroup svm
@@ -51,7 +52,24 @@ void riscv_dsp_svm_sigmoid_est_f32(
     const float32_t *pcoe = instance->dualcoe;
     float32_t gm = instance->gamma;
     float32_t c0 = instance->coef0;
-
+#ifdef UNROLL
+    for (i = 0; i < cntvec; i++)
+    {
+        float32_t dot2 = 0;
+        dot = 0;
+        for (j = 0; j < cntdim; j+=2)
+        {
+            dot = dot + src[j] * *pvec++;
+            dot2 = dot2 + src[j+1] * *pvec++;
+        }
+        for (; j < cntdim; j++)
+        {
+            dot = dot + src[j] * *pvec++;
+        }
+        dot = dot + dot2;
+        sum += *pcoe++ * tanhf(gm * dot + c0);
+    }
+#else
     for (i = 0; i < cntvec; i++)
     {
         dot = 0;
@@ -61,6 +79,7 @@ void riscv_dsp_svm_sigmoid_est_f32(
         }
         sum += *pcoe++ * tanhf(gm * dot + c0);
     }
+#endif
     *result = instance->classes[STEP(sum)];
 }
 

@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL
 
 /**
  * @ingroup basic
@@ -51,6 +52,22 @@
 void riscv_dsp_offset_f32(float32_t * FUNC_RESTRICT src, float32_t offset, float32_t * FUNC_RESTRICT dst,
                       uint32_t size)
 {
+#ifdef UNROLL
+    float32_t r1 =0.0f, r2 = 0.0f;
+    while (size > 1u)
+    {
+        r1 = (*src++) + offset;
+        r2 = (*src++) + offset;
+        *dst++ = r1;
+        *dst++ = r2;
+        size -= 2;
+    }
+    while (size > 0u)
+    {
+        *dst++ = (*src++) + offset;
+        size --;
+    }
+#else
     while (size != 0u)
     {
         /* y = x + offset */
@@ -58,6 +75,7 @@ void riscv_dsp_offset_f32(float32_t * FUNC_RESTRICT src, float32_t offset, float
 
         size--;
     }
+#endif
 }
 
 /**

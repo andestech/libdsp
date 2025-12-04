@@ -21,6 +21,7 @@
 
 #include "internal_isa.h"
 #include "internal_math_types.h"
+#define UNROLL2
 
 void riscv_dsp_convert_q15_q31(q15_t * FUNC_RESTRICT src, q31_t * FUNC_RESTRICT dst, uint32_t size)
 {

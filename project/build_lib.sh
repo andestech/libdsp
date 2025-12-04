@@ -28,6 +28,10 @@ if [[ $EXTRA_FLAG == *"-mzfh"* ]]; then
 fi
 
 DEFINE_RES_LOG=10
+ENA_FFT_RADIX8=1
+ENA_FFT_RADIX4BY2=1
+ENA_SMALL_FFT_INDV=1    # 1: 4/8 pts cfft using indivial functions
+
 
 VERSION_C="${SRC_DIR}/nds_version.c"
 if [ ! -f ${VERSION_C} ]; then
@@ -39,25 +43,41 @@ fi
 source $SRC_DIR/source_file_list
 
 BUILD_DIR="build_dir"
-C_FLAGS="-O3 -DRES_LOGN=$DEFINE_RES_LOG -frandom-seed=libdsp -ffunction-sections -fdata-sections -Wall -Wextra -Werror -Wno-narrowing -DPF_COUNTER -DHERMITE_INTERPOLATION"
+C_FLAGS="-O3 -DRES_LOGN=$DEFINE_RES_LOG -frandom-seed=libdsp -ffunction-sections -fdata-sections -Wall -Wextra -Werror -Wno-narrowing -DPF_COUNTER -DHERMITE_INTERPOLATION -fno-strict-aliasing"
+if [ "$ENA_FFT_RADIX8" == "1" ]; then
+    C_FLAGS="$C_FLAGS -DENA_FFT_RADIX8"
+fi
+if [ "$ENA_FFT_RADIX4BY2" == "1" ]; then
+    C_FLAGS="$C_FLAGS -DENA_FFT_RADIX4BY2_Q15 -DENA_FFT_RADIX4BY2_Q31"
+fi
+if [ "$ENA_SMALL_FFT_INDV" == "1" ]; then
+    C_FLAGS="$C_FLAGS -DSMALL_FFT_INDV_FUNC"
+fi
+
+echo $C_FLAGS
+
 BUILD_FLAGS="$C_FLAGS $EXTRA_FLAG"
 INCLUDE="-I$CUR_DIR -I$SRC_DIR/include -I$SRC_DIR/internal"
 
 function Build_OBJ () {
     SRC_FNAME=${1}
-    C_NAME="`echo ${SRC_FNAME} | rev | cut -d '/' -f1 | rev | cut -d '.' -f1`"
+    C_NAME="${SRC_FNAME##*/}"
+    C_NAME="${C_NAME%.*}"
     echo "${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${SRC_DIR}/${SRC_FNAME}" | tee -a build.log
     ${CC} ${INCLUDE} ${BUILD_FLAGS} -c -o ${C_NAME}.o ${SRC_DIR}/${SRC_FNAME}
-    if [ "$?" != "0" ]; then
+    ret=$?
+    if [ "$ret" != "0" ]; then
         echo "${C_NAME}.o build fail"
-        exit
+        touch build_fail_hint
+        exit 1
     fi
 }
 
 #### start build library
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
-rm -rf build.log *.o libdsp.a
+BUILD_DIR_PATH=`pwd`
+rm -rf build.log *.o libdsp.a build_fail_hint
 
 ## Check bash verion to decide parallel building
 REQ_BASH_MAJOR=5
@@ -82,7 +102,7 @@ if [ $PARALLEL_BUILD == "true" ]; then
             # to be finished so there is a place to start next one.
             wait -n
         fi
-        done
+    done
 else
     for FUNC_NAME in $FUNCTION_LIST;do
         Build_OBJ "${FUNC_NAME}"
@@ -98,6 +118,12 @@ fi
 # no more jobs to be started but wait for pending jobs
 # (all need to be finished)
 wait
+
+FAIL_HINT="${BUILD_DIR_PATH}/build_fail_hint"
+if [ -e "${FAIL_HINT}" ]; then
+    echo "Build libdsp.a error!"
+    exit 1
+fi
 
 echo "" >> build.log
 ALL_OBJ_FILES=`ls *.o`

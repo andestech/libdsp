@@ -19,6 +19,7 @@
 
 #include <config.h>
 #include "internal_math_types.h"
+#define UNROLL2
 
 /**
  * @ingroup utils
@@ -53,11 +54,28 @@
 
 void riscv_dsp_convert_q15_f32(q15_t * FUNC_RESTRICT src, float32_t * FUNC_RESTRICT dst, uint32_t size)
 {
+#ifdef UNROLL2
+    float32_t r1, r2;
+    while (size > 1u)
+    {
+        r1 =  dsp_convert_q15_to_float(*src++);
+        r2 =  dsp_convert_q15_to_float(*src++);
+        *dst++ = r1;
+        *dst++ = r2;
+        size -= 2;
+    }
+    while (size > 0u)
+    {
+        *dst++ = dsp_convert_q15_to_float(*src++);
+        size --;
+    }
+#else
     while (size != 0u)
     {
         *dst++ = dsp_convert_q15_to_float(*src++);
         size--;
     }
+#endif
 }
 
 /**

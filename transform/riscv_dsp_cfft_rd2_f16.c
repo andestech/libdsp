@@ -430,3 +430,236 @@ int32_t riscv_dsp_cifft_rd2_f16(float16_t *src, uint32_t m)
     /* Bit reversal permutation */
     return riscv_dsp_bit_reversal_f16 (src, m);
 }
+
+
+int32_t riscv_dsp_cfft_8pt_f16(float16_t *src, uint32_t m)
+{
+    (void) m;
+    float16_t tmp_cal_float_r[8];
+    float16_t tmp_cal_float_i[8];
+    float16_t TW_81 = (float16_t)0.70710678f;
+    float16_t tmp_cpx_r[16];
+    float16_t tmp_cpx_i[16];
+
+    tmp_cal_float_r[0] = src[0] + src[8];
+    tmp_cal_float_i[0] = src[1] + src[9];
+    tmp_cal_float_r[1] = src[0] - src[8];
+    tmp_cal_float_i[1] = src[1] - src[9];
+    tmp_cal_float_r[2] = src[2] + src[10];
+    tmp_cal_float_i[2] = src[3] + src[11];
+    tmp_cal_float_r[3] = src[2] - src[10];
+    tmp_cal_float_i[3] = src[3] - src[11];
+    tmp_cal_float_r[4] = src[4] + src[12];
+    tmp_cal_float_i[4] = src[5] + src[13];
+    tmp_cal_float_r[5] = src[4] - src[12];
+    tmp_cal_float_i[5] = src[5] - src[13];
+    tmp_cal_float_r[6] = src[6] + src[14];
+    tmp_cal_float_i[6] = src[7] + src[15];
+    tmp_cal_float_r[7] = src[6] - src[14];
+    tmp_cal_float_i[7] = src[7] - src[15];
+
+    tmp_cpx_r[0] = tmp_cal_float_r[0];
+    tmp_cpx_i[0] = tmp_cal_float_i[0];
+    tmp_cpx_r[1] = tmp_cal_float_r[1];
+    tmp_cpx_i[1] = tmp_cal_float_i[1];
+    tmp_cpx_r[2] = tmp_cal_float_r[2];
+    tmp_cpx_i[2] = tmp_cal_float_i[2];
+    tmp_cpx_r[4] = tmp_cal_float_r[4];
+    tmp_cpx_i[4] = tmp_cal_float_i[4];
+    tmp_cpx_r[6] = tmp_cal_float_r[6];
+    tmp_cpx_i[6] = tmp_cal_float_i[6];
+    tmp_cpx_r[5] = tmp_cal_float_i[5];
+    tmp_cpx_i[5] = -tmp_cal_float_r[5];
+    tmp_cpx_r[3] = (tmp_cal_float_r[3] + tmp_cal_float_i[3]) * TW_81;
+    tmp_cpx_i[3] = (tmp_cal_float_i[3] - tmp_cal_float_r[3]) * TW_81;
+    tmp_cpx_r[7] = (tmp_cal_float_r[7] - tmp_cal_float_i[7]) * TW_81;
+    tmp_cpx_i[7] = (tmp_cal_float_i[7] + tmp_cal_float_r[7]) * TW_81;
+
+    tmp_cpx_r[8] = tmp_cpx_r[0] + tmp_cpx_r[4];
+    tmp_cpx_i[8] = tmp_cpx_i[0] + tmp_cpx_i[4];
+    tmp_cpx_r[9] = tmp_cpx_r[1] + tmp_cpx_r[5];
+    tmp_cpx_i[9] = tmp_cpx_i[1] + tmp_cpx_i[5];
+    tmp_cpx_r[10] = tmp_cpx_r[0] - tmp_cpx_r[4];
+    tmp_cpx_i[10] = tmp_cpx_i[0] - tmp_cpx_i[4];
+    tmp_cpx_r[11] = tmp_cpx_r[1] - tmp_cpx_r[5];
+    tmp_cpx_i[11] = tmp_cpx_i[1] - tmp_cpx_i[5];
+
+    tmp_cpx_r[12] = tmp_cpx_r[2] + tmp_cpx_r[6];
+    tmp_cpx_i[12] = tmp_cpx_i[2] + tmp_cpx_i[6];
+    tmp_cpx_r[13] = tmp_cpx_r[3] - tmp_cpx_r[7];
+    tmp_cpx_i[13] = tmp_cpx_i[3] - tmp_cpx_i[7];
+    tmp_cpx_r[14] = tmp_cpx_r[2] - tmp_cpx_r[6];
+    tmp_cpx_i[14] = tmp_cpx_i[2] - tmp_cpx_i[6];
+    tmp_cpx_r[15] = tmp_cpx_r[3] + tmp_cpx_r[7];
+    tmp_cpx_i[15] = tmp_cpx_i[3] + tmp_cpx_i[7];
+
+    src[0]  = tmp_cpx_r[8] + tmp_cpx_r[12];
+    src[1]  = tmp_cpx_i[8] + tmp_cpx_i[12];
+    src[2]  = tmp_cpx_r[9] + tmp_cpx_r[13];
+    src[3]  = tmp_cpx_i[9] + tmp_cpx_i[13];
+    src[4]  = tmp_cpx_r[10] + tmp_cpx_i[14];
+    src[5]  = tmp_cpx_i[10] - tmp_cpx_r[14];
+    src[6]  = tmp_cpx_r[11] + tmp_cpx_i[15];
+    src[7]  = tmp_cpx_i[11] - tmp_cpx_r[15];
+    src[8]  = tmp_cpx_r[8] - tmp_cpx_r[12];
+    src[9]  = tmp_cpx_i[8] - tmp_cpx_i[12];
+    src[10] = tmp_cpx_r[9] - tmp_cpx_r[13];
+    src[11] = tmp_cpx_i[9] - tmp_cpx_i[13];
+    src[12] = tmp_cpx_r[10] - tmp_cpx_i[14];
+    src[13] = tmp_cpx_i[10] + tmp_cpx_r[14];
+    src[14] = tmp_cpx_r[11] - tmp_cpx_i[15];
+    src[15] = tmp_cpx_i[11] + tmp_cpx_r[15];
+
+    return 0;
+}
+
+int32_t riscv_dsp_cfft_4pt_f16(float16_t *src, uint32_t m)
+{
+    // used for 3pts rfft
+    (void) m;
+    float16_t tmp_cal_float_r[4];
+    float16_t tmp_cal_float_i[4];
+
+    tmp_cal_float_r[0] = src[0] + src[4];
+    tmp_cal_float_i[0] = src[1] + src[5];
+    tmp_cal_float_r[1] = src[0] - src[4];
+    tmp_cal_float_i[1] = src[1] - src[5];
+
+    tmp_cal_float_r[2] = src[2] + src[6];
+    tmp_cal_float_i[2] = src[3] + src[7];
+    tmp_cal_float_r[3] = src[2] - src[6];
+    tmp_cal_float_i[3] = src[3] - src[7];
+
+    src[0] = tmp_cal_float_r[0] + tmp_cal_float_r[2];
+    src[1] = tmp_cal_float_i[0] + tmp_cal_float_i[2];
+
+    src[2] = tmp_cal_float_r[1] + tmp_cal_float_i[3];
+    src[3] = tmp_cal_float_i[1] - tmp_cal_float_r[3];
+
+    src[4] = tmp_cal_float_r[0] - tmp_cal_float_r[2];
+    src[5] = tmp_cal_float_i[0] - tmp_cal_float_i[2];
+
+    src[6] = tmp_cal_float_r[1] - tmp_cal_float_i[3];
+    src[7] = tmp_cal_float_i[1] + tmp_cal_float_r[3];
+
+    return 0;
+
+}
+
+int32_t riscv_dsp_cifft_8pt_f16(float16_t *src, uint32_t m)
+{
+    (void) m;
+    float16_t tmp_cal_float_r[8];
+    float16_t tmp_cal_float_i[8];
+    float16_t TW_81 = (float16_t)0.70710678f;
+    float16_t tmp_cpx_r[16];
+    float16_t tmp_cpx_i[16];
+    float16_t inv_factor = (float16_t)1.0f/ 8.0f ;
+
+    tmp_cal_float_r[0] = src[0] + src[8];
+    tmp_cal_float_i[0] = src[1] + src[9];
+    tmp_cal_float_r[1] = src[0] - src[8];
+    tmp_cal_float_i[1] = src[1] - src[9];
+    tmp_cal_float_r[2] = src[2] + src[10];
+    tmp_cal_float_i[2] = src[3] + src[11];
+    tmp_cal_float_r[3] = src[2] - src[10];
+    tmp_cal_float_i[3] = src[3] - src[11];
+    tmp_cal_float_r[4] = src[4] + src[12];
+    tmp_cal_float_i[4] = src[5] + src[13];
+    tmp_cal_float_r[5] = src[4] - src[12];
+    tmp_cal_float_i[5] = src[5] - src[13];
+    tmp_cal_float_r[6] = src[6] + src[14];
+    tmp_cal_float_i[6] = src[7] + src[15];
+    tmp_cal_float_r[7] = src[6] - src[14];
+    tmp_cal_float_i[7] = src[7] - src[15];
+
+    tmp_cpx_r[0] = tmp_cal_float_r[0];
+    tmp_cpx_i[0] = tmp_cal_float_i[0];
+    tmp_cpx_r[1] = tmp_cal_float_r[1];
+    tmp_cpx_i[1] = tmp_cal_float_i[1];
+    tmp_cpx_r[2] = tmp_cal_float_r[2];
+    tmp_cpx_i[2] = tmp_cal_float_i[2];
+    tmp_cpx_r[4] = tmp_cal_float_r[4];
+    tmp_cpx_i[4] = tmp_cal_float_i[4];
+    tmp_cpx_r[6] = tmp_cal_float_r[6];
+    tmp_cpx_i[6] = tmp_cal_float_i[6];
+    tmp_cpx_r[5] = -tmp_cal_float_i[5];
+    tmp_cpx_i[5] = tmp_cal_float_r[5];
+    tmp_cpx_r[3] = (tmp_cal_float_r[3] - tmp_cal_float_i[3]) * TW_81;
+    tmp_cpx_i[3] = (tmp_cal_float_i[3] + tmp_cal_float_r[3]) * TW_81;
+    tmp_cpx_r[7] = (tmp_cal_float_r[7] + tmp_cal_float_i[7]) * TW_81;
+    tmp_cpx_i[7] = (tmp_cal_float_i[7] - tmp_cal_float_r[7]) * TW_81;
+
+    tmp_cpx_r[8] = tmp_cpx_r[0] + tmp_cpx_r[4];
+    tmp_cpx_i[8] = tmp_cpx_i[0] + tmp_cpx_i[4];
+    tmp_cpx_r[9] = tmp_cpx_r[1] + tmp_cpx_r[5];
+    tmp_cpx_i[9] = tmp_cpx_i[1] + tmp_cpx_i[5];
+    tmp_cpx_r[10] = tmp_cpx_r[0] - tmp_cpx_r[4];
+    tmp_cpx_i[10] = tmp_cpx_i[0] - tmp_cpx_i[4];
+    tmp_cpx_r[11] = tmp_cpx_r[1] - tmp_cpx_r[5];
+    tmp_cpx_i[11] = tmp_cpx_i[1] - tmp_cpx_i[5];
+
+    tmp_cpx_r[12] = tmp_cpx_r[2] + tmp_cpx_r[6];
+    tmp_cpx_i[12] = tmp_cpx_i[2] + tmp_cpx_i[6];
+    tmp_cpx_r[13] = tmp_cpx_r[3] - tmp_cpx_r[7];
+    tmp_cpx_i[13] = tmp_cpx_i[3] - tmp_cpx_i[7];
+    tmp_cpx_r[14] = tmp_cpx_r[2] - tmp_cpx_r[6];
+    tmp_cpx_i[14] = tmp_cpx_i[2] - tmp_cpx_i[6];
+    tmp_cpx_r[15] = tmp_cpx_r[3] + tmp_cpx_r[7];
+    tmp_cpx_i[15] = tmp_cpx_i[3] + tmp_cpx_i[7];
+
+    src[0]  = (tmp_cpx_r[8] + tmp_cpx_r[12]) * inv_factor;
+    src[1]  = (tmp_cpx_i[8] + tmp_cpx_i[12]) * inv_factor;
+    src[2]  = (tmp_cpx_r[9] + tmp_cpx_r[13]) * inv_factor;
+    src[3]  = (tmp_cpx_i[9] + tmp_cpx_i[13]) * inv_factor;
+    src[4]  = (tmp_cpx_r[10] - tmp_cpx_i[14]) * inv_factor;
+    src[5]  = (tmp_cpx_i[10] + tmp_cpx_r[14]) * inv_factor;
+    src[6]  = (tmp_cpx_r[11] - tmp_cpx_i[15]) * inv_factor;
+    src[7]  = (tmp_cpx_i[11] + tmp_cpx_r[15]) * inv_factor;
+    src[8]  = (tmp_cpx_r[8] - tmp_cpx_r[12]) * inv_factor;
+    src[9]  = (tmp_cpx_i[8] - tmp_cpx_i[12]) * inv_factor;
+    src[10] = (tmp_cpx_r[9] - tmp_cpx_r[13]) * inv_factor;
+    src[11] = (tmp_cpx_i[9] - tmp_cpx_i[13]) * inv_factor;
+    src[12] = (tmp_cpx_r[10] + tmp_cpx_i[14]) * inv_factor;
+    src[13] = (tmp_cpx_i[10] - tmp_cpx_r[14]) * inv_factor;
+    src[14] = (tmp_cpx_r[11] + tmp_cpx_i[15]) * inv_factor;
+    src[15] = (tmp_cpx_i[11] - tmp_cpx_r[15]) * inv_factor;
+
+    return 0;
+}
+
+int32_t riscv_dsp_cifft_4pt_f16(float16_t *src, uint32_t m)
+{
+    // used for 3pts rfft
+    (void) m;
+    float16_t inv_factor = 1.0f / 4.0f;
+    float16_t tmp_cal_float_r[4];
+    float16_t tmp_cal_float_i[4];
+
+    tmp_cal_float_r[0] = src[0] + src[4];
+    tmp_cal_float_i[0] = src[1] + src[5];
+    tmp_cal_float_r[1] = src[0] - src[4];
+    tmp_cal_float_i[1] = src[1] - src[5];
+
+    tmp_cal_float_r[2] = src[2] + src[6];
+    tmp_cal_float_i[2] = src[3] + src[7];
+    tmp_cal_float_r[3] = src[2] - src[6];
+    tmp_cal_float_i[3] = src[3] - src[7];
+
+    src[0] = (tmp_cal_float_r[0] + tmp_cal_float_r[2]) * inv_factor;
+    src[1] = (tmp_cal_float_i[0] + tmp_cal_float_i[2]) * inv_factor;
+
+    src[2] = (tmp_cal_float_r[1] - tmp_cal_float_i[3]) * inv_factor;
+    src[3] = (tmp_cal_float_i[1] + tmp_cal_float_r[3]) * inv_factor;
+
+    src[4] = (tmp_cal_float_r[0] - tmp_cal_float_r[2]) * inv_factor;
+    src[5] = (tmp_cal_float_i[0] - tmp_cal_float_i[2]) * inv_factor;
+
+    src[6] = (tmp_cal_float_r[1] + tmp_cal_float_i[3]) * inv_factor;
+    src[7] = (tmp_cal_float_i[1] - tmp_cal_float_r[3]) * inv_factor;
+
+    return 0;
+
+}
+
+

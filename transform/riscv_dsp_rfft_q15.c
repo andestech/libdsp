@@ -21,9 +21,12 @@
 #include "internal_transform_math.h"
 
 //Declare the external functions
+#ifndef ENA_FFT_REARCH
 extern int32_t riscv_dsp_cfft_q15(q15_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_q15(q15_t *src, uint32_t m);
-
+#else
+#include "riscv_dsp_transform_math.h"
+#endif
 extern int32_t riscv_dsp_cfft_q15_noscale(q15_t *src, uint32_t m);
 /**
  * @ingroup transform

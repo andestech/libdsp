@@ -21,8 +21,12 @@
 #include "internal_transform_math.h"
 
 //Declare the external functions
+#ifndef ENA_FFT_REARCH
 extern int32_t riscv_dsp_cfft_f64(float64_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_f64(float64_t *src, uint32_t m);
+#else
+#include "riscv_dsp_transform_math.h"
+#endif 
 
 /* function description */
 int32_t riscv_dsp_rfft_f64(float64_t *src, uint32_t m)

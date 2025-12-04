@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL2
 
 /**
  * @ingroup statistics
@@ -55,12 +56,29 @@ float32_t riscv_dsp_mean_f32(const float32_t *src, uint32_t size)
     {
         float32_t sum = 0.0f;
         uint32_t i = size;
+#ifdef UNROLL2
+        float32_t sum2 = 0.0f;
+        do
+        {
+            sum += *src++;
+            sum2 += *src++;
+            i -= 2;
+        }
+        while(i > 1);
 
+        while(i > 0)
+        {
+            sum += *src++;
+            i--;
+        }
+        sum = sum + sum2;   
+#else
         do
         {
             sum += *src++;
         }
         while (--i);
+#endif
         dst = sum / (float32_t) size;
     }
     return dst;

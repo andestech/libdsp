@@ -966,6 +966,336 @@ int32_t riscv_dsp_cfft_rd4_q31_noscale(q31_t *src, uint32_t m)
 }
 
 
+int32_t riscv_dsp_cfft_rd4by2_q31(q31_t *src, uint32_t m)
+{
+    register unsigned int j, ia1, k;
+    q31_t c1, s1, tmp_r1, tmp_i1, tmp_r2, tmp_i2;
+    q63_t tmp_cr, tmp_ci;
+
+    q31_t *ptrs_1 = NULL; 
+    q31_t *ptrs_2 = NULL;
+    q31_t *ptrs_1_tmp = NULL;
+    q31_t *ptrs_2_tmp = NULL;
+
+    unsigned int n;
+
+#ifdef CHECK_RANGE
+    /* Quick return for m < 4, m > 14, and m is odd */
+    if (m < 4 || m > 14 || ((m & 0x1) != 0))
+    {
+        /* only support n = 16, 64, 256, 1024, 4096, and 16384 that is,
+         ** m = 4, 6, 8, 10, 12, and 14. */
+        return -1;
+    }
+#endif /* CHECK_RANGE */
+
+    n = 1 << (m-1);              // unit in complex
+
+#if FFT_LOGN > RES_LOGN
+    q31_t p;
+    p = riscv_dsp_recip_table_q31[m - 2]; /* 2 / FFT_N */
+#endif
+
+#ifdef RD4BY2_USING_STACK
+#if RES_LOGN <= 10
+    q31_t tmp[1024*2];   // max support up to m = 10;
+#else
+    q31_t tmp[8192*2];   // max support up to m = 13;
+#endif
+#else
+    q31_t * tmp = (q31_t*)NDSV_MALLOC(sizeof(q31_t) * 2 * 2 * n);
+#endif
+    ptrs_1 = &src[0];       
+    ptrs_2 = &src[2*n];     // 1 complex = 2 real value
+    ptrs_1_tmp = &tmp[0];
+    ptrs_2_tmp = &tmp[2*n];  // 1 complex = 2 real value
+    // pre-processing
+    ia1 = 0;
+
+    for(j = 0 ; j < n ; j ++)
+    {
+#if FFT_LOGN > RES_LOGN
+        GET_COS_SIN_VALUES(ia1, c1, s1, p, q31);
+#else
+        GET_COS_SIN_VALUES(ia1, c1, s1, m, q31);
+#endif /* FFT_LOGN > RES_LOGN */
+        ia1 += 1;
+        tmp_r1 = ((ptrs_1[2*j] >> 1) + (ptrs_2[2*j] >> 1)) >> 1; 
+        tmp_i1 = ((ptrs_1[2*j + 1]>>1) + (ptrs_2[2*j + 1] >> 1)) >> 1;
+ 
+        tmp_r2 = ((ptrs_1[2*j] >> 1) - (ptrs_2[2*j] >> 1));
+        tmp_i2 = ((ptrs_1[2*j + 1]>>1) - (ptrs_2[2*j + 1] >> 1));
+
+        ptrs_1_tmp[2*j] = tmp_r1;
+        ptrs_1_tmp[2*j+1] = tmp_i1;
+
+        tmp_cr = (q63_t)(((q63_t) tmp_r2*c1 + (q63_t) tmp_i2*s1) >> 32);
+        tmp_ci = (q63_t)(((q63_t) tmp_i2*c1 - (q63_t) tmp_r2*s1) >> 32);
+        
+        ptrs_2_tmp[2*j] = (q31_t) tmp_cr;
+        ptrs_2_tmp[2*j+1] = (q31_t) tmp_ci;
+    }
+
+    riscv_dsp_cfft_rd4_q31(&ptrs_1_tmp[0], m-1);
+
+    riscv_dsp_cfft_rd4_q31(&ptrs_2_tmp[0], m-1);
+
+    // post-processing, merge the fft result
+    k = 0;
+
+    for(j = 0 ; j < n ; j++)
+    {
+        tmp_cr = (q63_t) ptrs_1_tmp[2*j] << 1;
+        tmp_ci = (q63_t) ptrs_1_tmp[2*j+1] << 1;
+        src[2*k] =  (q31_t) NDS_ISA_SATS(tmp_cr, 32);
+        src[2*k+1] = (q31_t) NDS_ISA_SATS(tmp_ci, 32);
+        
+        tmp_cr = (q63_t) ptrs_2_tmp[2*j] << 1;
+        tmp_ci = (q63_t) ptrs_2_tmp[2*j+1] << 1;
+        src[2*(k+1)] = (q31_t) NDS_ISA_SATS(tmp_cr, 32);
+        src[2*(k+1)+1] = (q31_t) NDS_ISA_SATS(tmp_ci, 32);
+        k += 2;
+    }
+
+#ifndef RD4BY2_USING_STACK
+    NDSV_FREE(tmp);
+#endif
+    return 0;
+}
+
+#ifndef ENA_DSP_ISA_32
+// this sub function only for pureC and RV64P for better performance
+int32_t riscv_dsp_cfft_rd4by2_q31_small(q31_t *src, uint32_t m)
+{
+    register unsigned int j, ia1, k;
+    q31_t c1, s1, tmp_r1, tmp_i1, tmp_r2, tmp_i2;
+    q63_t tmp_cr, tmp_ci;
+
+    q31_t *ptrs_1 = NULL;
+    q31_t *ptrs_2 = NULL;
+    q31_t *ptrs_1_tmp = NULL;
+    q31_t *ptrs_2_tmp = NULL;
+
+    unsigned int n;
+
+    n = 1 << (m-1);              // unit in complex
+
+#if FFT_LOGN > RES_LOGN
+    q31_t p;
+    p = riscv_dsp_recip_table_q31[m - 2]; /* 2 / FFT_N */
+#endif
+
+    q31_t tmp[32*2];
+    ptrs_1 = &src[0];
+    ptrs_2 = &src[2*n];     // 1 complex = 2 real value
+    ptrs_1_tmp = &tmp[0];
+    ptrs_2_tmp = &tmp[2*n];  // 1 complex = 2 real value
+    // pre-processing
+    ia1 = 0;
+    for(j = 0 ; j < n ; j ++)
+    {
+#if FFT_LOGN > RES_LOGN
+        GET_COS_SIN_VALUES(ia1, c1, s1, p, q31);
+#else
+        GET_COS_SIN_VALUES(ia1, c1, s1, m, q31);
+#endif /* FFT_LOGN > RES_LOGN */
+        ia1 += 1;
+        tmp_r1 = ((ptrs_1[2*j] >> 1) + (ptrs_2[2*j] >> 1)) >> 1;
+        tmp_i1 = ((ptrs_1[2*j + 1]>>1) + (ptrs_2[2*j + 1] >> 1)) >> 1;
+
+        tmp_r2 = ((ptrs_1[2*j] >> 1) - (ptrs_2[2*j] >> 1));
+        tmp_i2 = ((ptrs_1[2*j + 1]>>1) - (ptrs_2[2*j + 1] >> 1));
+
+        ptrs_1_tmp[2*j] = tmp_r1;
+        ptrs_1_tmp[2*j+1] = tmp_i1;
+
+        tmp_cr = (q63_t)(((q63_t) tmp_r2*c1 + (q63_t) tmp_i2*s1) >> 32);
+        tmp_ci = (q63_t)(((q63_t) tmp_i2*c1 - (q63_t) tmp_r2*s1) >> 32);
+
+        ptrs_2_tmp[2*j] = (q31_t) tmp_cr;
+        ptrs_2_tmp[2*j+1] = (q31_t) tmp_ci;
+    }
+
+    riscv_dsp_cfft_rd4_q31(&ptrs_1_tmp[0], m-1);
+
+    riscv_dsp_cfft_rd4_q31(&ptrs_2_tmp[0], m-1);
+
+    // post-processing, merge the fft result
+    k = 0;
+    for(j = 0 ; j < n ; j++)
+    {
+        tmp_cr = (q63_t) ptrs_1_tmp[2*j] << 1;
+        tmp_ci = (q63_t) ptrs_1_tmp[2*j+1] << 1;
+        src[2*k] =  (q31_t) NDS_ISA_SATS(tmp_cr, 32);
+        src[2*k+1] = (q31_t) NDS_ISA_SATS(tmp_ci, 32);
+
+        tmp_cr = (q63_t) ptrs_2_tmp[2*j] << 1;
+        tmp_ci = (q63_t) ptrs_2_tmp[2*j+1] << 1;
+        src[2*(k+1)] = (q31_t) NDS_ISA_SATS(tmp_cr, 32);
+        src[2*(k+1)+1] = (q31_t) NDS_ISA_SATS(tmp_ci, 32);
+        k += 2;
+    }
+    return 0;
+}
+#endif // #ifndef ENA_DSP_ISA_32
+
+// inverse fft radix4by2
+int32_t riscv_dsp_cifft_rd4by2_q31(q31_t *src, uint32_t m)
+{
+    register unsigned int j, ia1, k;
+    q31_t c1, s1, tmp_r1, tmp_i1, tmp_r2, tmp_i2;
+    q63_t tmp_cr, tmp_ci;
+
+    q31_t *ptrs_1 = NULL; 
+    q31_t *ptrs_2 = NULL;
+    q31_t *ptrs_1_tmp = NULL;
+    q31_t *ptrs_2_tmp = NULL;
+    unsigned int n;
+
+#ifdef CHECK_RANGE
+    /* Quick return for m < 4, m > 14, and m is odd */
+    if (m < 4 || m > 14 || ((m & 0x1) != 0))
+    {
+        /* only support n = 16, 64, 256, 1024, 4096, and 16384 that is,
+         ** m = 4, 6, 8, 10, 12, and 14. */
+        return -1;
+    }
+#endif /* CHECK_RANGE */
+
+    n = 1 << (m-1);
+
+#if FFT_LOGN > RES_LOGN
+    q31_t p;
+    p = riscv_dsp_recip_table_q31[m - 2]; /* 2 / FFT_N */
+#endif
+
+#ifdef RD4BY2_USING_STACK
+#if RES_LOGN <= 10
+    q31_t tmp[1024*2];   // max support up to m = 10;
+#else
+    q31_t tmp[8192*2];   // max support up to m = 13;
+#endif
+#else
+    q31_t * tmp = NDSV_MALLOC(sizeof(q31_t) * 2 * 2 * n);
+#endif
+    ptrs_1 = &src[0];
+    ptrs_2 = &src[2*n];     // 1 complex = 2 real value
+    ptrs_1_tmp = &tmp[0];
+    ptrs_2_tmp = &tmp[2*n];  // 1 complex = 2 real value
+    // pre-processing
+    ia1 = 0;
+
+    for(j = 0 ; j < n ; j ++)
+    {
+#if FFT_LOGN > RES_LOGN
+        GET_COS_SIN_VALUES(ia1, c1, s1, p, q31);
+#else
+        GET_COS_SIN_VALUES(ia1, c1, s1, m, q31);
+#endif /* FFT_LOGN > RES_LOGN */
+        ia1 += 1;
+        tmp_r1 = (ptrs_1[2*j]) + (ptrs_2[2*j]); 
+        tmp_i1 = (ptrs_1[2*j + 1]) + (ptrs_2[2*j + 1]);
+ 
+        tmp_r2 = (ptrs_1[2*j]) - (ptrs_2[2*j]);
+        tmp_i2 = (ptrs_1[2*j + 1]) - (ptrs_2[2*j + 1]);
+
+        ptrs_1_tmp[2*j] = tmp_r1;
+        ptrs_1_tmp[2*j+1] = tmp_i1;
+
+        tmp_cr = (q63_t)(((q63_t) tmp_r2*c1 - (q63_t) tmp_i2*s1) >> 31);
+        tmp_ci = (q63_t)(((q63_t) tmp_i2*c1 + (q63_t) tmp_r2*s1) >> 31);
+        ptrs_2_tmp[2*j] = (q31_t) tmp_cr;
+        ptrs_2_tmp[2*j+1] = (q31_t) tmp_ci;
+    }
+    riscv_dsp_cifft_rd4_q31(ptrs_1_tmp, m-1);
+
+    riscv_dsp_cifft_rd4_q31(ptrs_2_tmp, m-1);
+
+    // post-processing, merge the fft result
+    k = 0;
+    for(j = 0 ; j < n ; j++)
+    {
+        src[2*k] = ptrs_1_tmp[2*j];
+        src[2*k+1] = ptrs_1_tmp[2*j+1];
+        src[2*(k+1)] = ptrs_2_tmp[2*j];
+        src[2*(k+1)+1] = ptrs_2_tmp[2*j+1];
+        k += 2;
+    }
+#ifndef RD4BY2_USING_STACK
+    NDSV_FREE(tmp);
+#endif
+    return 0;
+}
+
+int32_t riscv_dsp_cifft_rd4by2_q31_small(q31_t *src, uint32_t m)
+{
+    register unsigned int j, ia1, k;
+    q31_t c1, s1, tmp_r1, tmp_i1, tmp_r2, tmp_i2;
+    q63_t tmp_cr, tmp_ci;
+
+    q31_t *ptrs_1 = NULL;
+    q31_t *ptrs_2 = NULL;
+    q31_t *ptrs_1_tmp = NULL;
+    q31_t *ptrs_2_tmp = NULL;
+    unsigned int n;
+
+    n = 1 << (m-1);
+
+#if FFT_LOGN > RES_LOGN
+    q31_t p;
+    p = riscv_dsp_recip_table_q31[m - 2]; /* 2 / FFT_N */
+#endif
+
+    q31_t tmp[32*2];
+    ptrs_1 = &src[0];
+    ptrs_2 = &src[2*n];     // 1 complex = 2 real value
+    ptrs_1_tmp = &tmp[0];
+    ptrs_2_tmp = &tmp[2*n];  // 1 complex = 2 real value
+    // pre-processing
+    ia1 = 0;
+
+    for(j = 0 ; j < n ; j ++)
+    {
+#if FFT_LOGN > RES_LOGN
+        GET_COS_SIN_VALUES(ia1, c1, s1, p, q31);
+#else
+        GET_COS_SIN_VALUES(ia1, c1, s1, m, q31);
+#endif /* FFT_LOGN > RES_LOGN */
+        ia1 += 1;
+        tmp_r1 = (ptrs_1[2*j]) + (ptrs_2[2*j]);
+        tmp_i1 = (ptrs_1[2*j + 1]) + (ptrs_2[2*j + 1]);
+
+        tmp_r2 = (ptrs_1[2*j]) - (ptrs_2[2*j]);
+        tmp_i2 = (ptrs_1[2*j + 1]) - (ptrs_2[2*j + 1]);
+
+        ptrs_1_tmp[2*j] = tmp_r1;
+        ptrs_1_tmp[2*j+1] = tmp_i1;
+
+        tmp_cr = (q63_t)(((q63_t) tmp_r2*c1 - (q63_t) tmp_i2*s1) >> 31);
+        tmp_ci = (q63_t)(((q63_t) tmp_i2*c1 + (q63_t) tmp_r2*s1) >> 31);
+        ptrs_2_tmp[2*j] = (q31_t) tmp_cr;
+        ptrs_2_tmp[2*j+1] = (q31_t) tmp_ci;
+    }
+
+    riscv_dsp_cifft_rd4_q31(ptrs_1_tmp, m-1);
+
+    riscv_dsp_cifft_rd4_q31(ptrs_2_tmp, m-1);
+
+    // post-processing, merge the fft result
+    k = 0;
+
+    for(j = 0 ; j < n ; j++)
+    {
+        src[2*k] = ptrs_1_tmp[2*j];
+        src[2*k+1] = ptrs_1_tmp[2*j+1];
+        src[2*(k+1)] = ptrs_2_tmp[2*j];
+        src[2*(k+1)+1] = ptrs_2_tmp[2*j+1];
+        k += 2;
+    }
+    return 0;
+}
+
+
 
 /**
  * @} end of cfft_radix4

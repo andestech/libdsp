@@ -20,6 +20,7 @@
 #include <config.h>
 #include "internal_isa.h"
 #include "internal_utils_math.h"
+#define MODY_ALGO
 
 /**
  * @ingroup utils
@@ -114,6 +115,13 @@ void riscv_dsp_convert_f32_q15(float32_t * FUNC_RESTRICT src, q15_t * FUNC_RESTR
 #else
     while (size != 0u)
     {
+#ifdef MODY_ALGO
+        float32_t offset[2] = {-0.5f, 0.5f};
+        in = *src++;
+        in *= (float32_t)(32768.0);
+        in += offset[(in >= 0.0f)];
+        rst = (q31_t)in;
+#else
         in = *src++;
         in *= (float32_t)(32768.0);
         if (in >= (float32_t)0.0f)
@@ -121,6 +129,7 @@ void riscv_dsp_convert_f32_q15(float32_t * FUNC_RESTRICT src, q15_t * FUNC_RESTR
         else
             in -= (float32_t)0.5;
         rst = (q31_t)in;
+#endif
     *dst++ = (q15_t) NDS_ISA_SATS(rst, 16u);
         size--;
     }

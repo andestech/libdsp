@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL
 
 /**
  * @ingroup statistics
@@ -51,14 +52,34 @@
 float32_t riscv_dsp_pwr_f32(const float32_t *src, uint32_t size)
 {
     float32_t sum = 0.0f, tmp;
+#ifdef UNROLL
+    float32_t sum2 = 0.0f, tmp2;
+ 
+    while (size > 1u)
+    {
+        tmp = *src++;
+        tmp2 = *src++;
+        sum += tmp * tmp;
+        sum2 += tmp2 * tmp2;
 
+        size -= 2;
+    }
+
+    while (size > 0u)
+    {
+        tmp = *src++;
+        sum += tmp * tmp;
+        size --;
+    }
+    sum = sum + sum2;
+#else
     while (size != 0u)
     {
         tmp = *src++;
         sum += tmp * tmp;
         size--;
     }
-
+#endif
     return sum;
 
 }

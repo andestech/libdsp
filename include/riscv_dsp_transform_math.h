@@ -24,6 +24,14 @@ extern "C"
 {
 #endif
 
+#define ENA_FFT_REARCH         // MOVE fft switch case to header as an inline function
+
+#ifdef ENA_FFT_REARCH
+#ifndef ENA_FFT_RADIX8_F32
+#define ENA_FFT_RADIX8_F32
+#endif
+#endif
+
 #include "riscv_dsp_math_types.h"
 
 /**
@@ -89,15 +97,112 @@ extern "C"
  * CIFFT functions.
  *     </pre>
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cfft_f32(float32_t *src, uint32_t m);
+#else
+#ifdef ENA_FFT_RADIX8_F32
+extern int32_t riscv_dsp_cfft_rd2_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd2_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd8_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd8_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_8pt_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_4pt_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_8pt_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_4pt_f32(float32_t *src, uint32_t m);
+#else
+extern int32_t riscv_dsp_cfft_rd2_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd2_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_8pt_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_4pt_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_8pt_f32(float32_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_4pt_f32(float32_t *src, uint32_t m);
+#endif
 
+static inline void riscv_dsp_cfft_f32(float32_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cfft_rd4_f32(src, m);
+        break;
+#ifdef ENA_FFT_RADIX8_F32
+    case 2:
+        riscv_dsp_cfft_4pt_f32(src, m);
+        break;
+    case 3:
+        riscv_dsp_cfft_8pt_f32(src, m);
+        break;
+    default :
+        riscv_dsp_cfft_rd8_f32(src, m);
+#else // ENA_FFT_RADIX8_F32
+    case 2:
+        riscv_dsp_cfft_4pt_f32(src, m);
+        break;
+    case 3:
+        riscv_dsp_cfft_8pt_f32(src, m);
+        break;
+    default :
+        riscv_dsp_cfft_rd2_f32(src, m);
+#endif // ENA_FFT_RADIX8_F32
+        break;
+    }
+}
+
+#endif // ENA_FFT_REARCH
 /**
  * @brief cfft of f64 vectors.
  * @param[in, out] src   pointer of the input vector. After the function is executed, the
  *                       output will be stored in the input vector.
  * @param[in]        m   base 2 logarithm value of the sample number and it can be set from 3 to 10
  */
+
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cfft_f64(float64_t *src, uint32_t m);
+#else // ENA_FFT_REARCH
+extern int32_t riscv_dsp_cfft_rd2_f64(float64_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_f64(float64_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd2_f64(float64_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4_f64(float64_t *src, uint32_t m);
+
+extern int32_t riscv_dsp_cfft_8pt_f64(float64_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_4pt_f64(float64_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_8pt_f64(float64_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_4pt_f64(float64_t *src, uint32_t m);
+
+static inline void riscv_dsp_cfft_f64(float64_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cfft_rd4_f64(src, m);
+        break;
+    case 2:
+        riscv_dsp_cfft_4pt_f64(src, m);
+        break;
+    case 3:
+        riscv_dsp_cfft_8pt_f64(src, m);
+        break;
+    default :
+        riscv_dsp_cfft_rd2_f64(src, m);
+        break;
+    }
+}
+
+#endif // ENA_FFT_REARCH
 
 /**
  * @brief cifft of f32 vectors.
@@ -105,15 +210,77 @@ void riscv_dsp_cfft_f64(float64_t *src, uint32_t m);
  *                       output will be stored in the input vector.
  * @param[in]        m   base 2 logarithm value of the sample number and it can be set from 3 to 10
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cifft_f32(float32_t *src, uint32_t m);
-
+#else
+static inline void riscv_dsp_cifft_f32(float32_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cifft_rd4_f32(src, m);
+        break;
+#ifdef ENA_FFT_RADIX8_F32
+    case 2:
+        riscv_dsp_cifft_4pt_f32(src, m);
+        break;
+    case 3:
+        riscv_dsp_cifft_8pt_f32(src, m);
+        break;
+    default :
+        riscv_dsp_cifft_rd8_f32(src, m);
+#else // ENA_FFT_RADIX8_F32
+    case 2:
+        riscv_dsp_cifft_4pt_f32(src, m);
+        break;
+    case 3:
+        riscv_dsp_cifft_8pt_f32(src, m);
+        break;
+    default :
+        riscv_dsp_cifft_rd2_f32(src, m);
+#endif // ENA_FFT_RADIX8_F32
+        break;
+    }
+}
+#endif
 /**
  * @brief cifft of f64 vectors.
  * @param[in, out] src   pointer of the input vector. After the function is executed, the
  *                       output will be stored in the input vector.
  * @param[in]        m   base 2 logarithm value of the sample number and it can be set from 3 to 10
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cifft_f64(float64_t *src, uint32_t m);
+#else
+static inline void riscv_dsp_cifft_f64(float64_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cifft_rd4_f64(src, m);
+        break;
+    case 2:
+        riscv_dsp_cifft_4pt_f64(src, m);
+        break;
+    case 3:
+        riscv_dsp_cifft_8pt_f64(src, m);
+        break;
+    default :
+        riscv_dsp_cifft_rd2_f64(src, m);
+        break;
+    }
+}
+#endif // ENA_FFT_REARCH
 
 #if defined (__riscv_zfh)
 /**
@@ -122,7 +289,43 @@ void riscv_dsp_cifft_f64(float64_t *src, uint32_t m);
  *                       output will be stored in the input vector.
  * @param[in]        m   base 2 logarithm value of the sample number and it can be set from 3 to 10
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cfft_f16(float16_t *src, uint32_t m);
+#else
+extern int32_t riscv_dsp_cfft_rd2_f16(float16_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_f16(float16_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd2_f16(float16_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4_f16(float16_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_8pt_f16(float16_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_4pt_f16(float16_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_8pt_f16(float16_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_4pt_f16(float16_t *src, uint32_t m);
+
+
+static inline void riscv_dsp_cfft_f16(float16_t *src, const uint32_t m)
+{
+    switch (m)
+    {
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cfft_rd4_f16(src, m);
+        break;
+    case 2:
+        riscv_dsp_cfft_4pt_f16(src, m);
+        break;
+    case 3:
+        riscv_dsp_cfft_8pt_f16(src, m);
+        break;
+    default :
+        riscv_dsp_cfft_rd2_f16(src, m);
+        break;
+    }
+}
+#endif // ENA_FFT_REARCH
 
 /**
  * @brief cifft of f16 vectors.
@@ -130,8 +333,35 @@ void riscv_dsp_cfft_f16(float16_t *src, uint32_t m);
  *                       output will be stored in the input vector.
  * @param[in]        m   base 2 logarithm value of the sample number and it can be set from 3 to 10
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cifft_f16(float16_t *src, uint32_t m);
-#endif
+#else
+static inline void riscv_dsp_cifft_f16(float16_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cifft_rd4_f16(src, m);
+        break;
+    case 2:
+        riscv_dsp_cifft_4pt_f16(src, m);
+        break;
+    case 3:
+        riscv_dsp_cifft_8pt_f16(src, m);
+        break;
+    default :
+        riscv_dsp_cifft_rd2_f16(src, m);
+        break;
+    }
+}
+#endif // ENA_FFT_REARCH
+
+#endif // defined (__riscv_zfh)
 
 /// Q15 Complex FFT/IFFT Function
 /**
@@ -148,7 +378,53 @@ void riscv_dsp_cifft_f16(float16_t *src, uint32_t m);
  *
  * @image html cfft_rd2.gif ""
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cfft_q15(q15_t *src, uint32_t m);
+#else // ENA_FFT_REARCH
+extern int32_t riscv_dsp_cfft_rd4by2_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4by2_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4by2_q15_small(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4by2_q15_small(q15_t *src, uint32_t m);
+
+extern int32_t riscv_dsp_cfft_rd2_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd2_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4_q15(q15_t *src, uint32_t m);
+
+
+extern int32_t riscv_dsp_cfft_8pt_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_4pt_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_8pt_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_4pt_q15(q15_t *src, uint32_t m);
+
+
+static inline void riscv_dsp_cfft_q15(q15_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 2:
+        riscv_dsp_cfft_4pt_q15(src, m);
+        break;
+    case 3:
+        riscv_dsp_cfft_8pt_q15(src, m);
+        break;
+    case 5:
+        riscv_dsp_cfft_rd4by2_q15_small(src, m);
+        break;
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cfft_rd4_q15(src, m);
+        break;
+    default :
+        riscv_dsp_cfft_rd4by2_q15(src, m);
+        break;
+    }
+}
+#endif // ENA_FFT_REARCH
 /**
  * @brief cifft of q15 vectors.
  * @param[in, out] src   pointer of the input vector. After the function is executed, the
@@ -163,8 +439,37 @@ void riscv_dsp_cfft_q15(q15_t *src, uint32_t m);
  *
  * @image html cifft_rd2.gif ""
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cifft_q15(q15_t *src, uint32_t m);
+#else // ENA_FFT_REARCH
+static inline void riscv_dsp_cifft_q15(q15_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 2:
+        riscv_dsp_cifft_4pt_q15(src, m);
+        break;
+    case 3:
+        riscv_dsp_cifft_8pt_q15(src, m);
+        break;
+    case 5:
+        riscv_dsp_cifft_rd4by2_q15_small(src, m);
+        break;
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cifft_rd4_q15(src, m);
+        break;
+    default :
+        riscv_dsp_cifft_rd4by2_q15(src, m);
+        break;
+    }
+}
 
+#endif // ENA_FFT_REARCH
 /// Q31 Complex FFT/IFFT Function
 /**
  * @brief cfft of q31 vectors.
@@ -180,7 +485,52 @@ void riscv_dsp_cifft_q15(q15_t *src, uint32_t m);
  *
  * @image html cfft_rd2_q31.gif ""
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cfft_q31(q31_t *src, uint32_t m);
+#else // ENA_FFT_REARCH
+extern int32_t riscv_dsp_cfft_rd4by2_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4by2_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4by2_q31_small(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4by2_q31_small(q31_t *src, uint32_t m);
+
+extern int32_t riscv_dsp_cfft_rd2_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd2_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4_q31(q31_t *src, uint32_t m);
+
+extern int32_t riscv_dsp_cfft_8pt_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_4pt_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_8pt_q31(q31_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_4pt_q31(q31_t *src, uint32_t m);
+
+
+static inline void riscv_dsp_cfft_q31(q31_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 2:
+        riscv_dsp_cfft_4pt_q31(src, m);
+        break;
+    case 3:
+        riscv_dsp_cfft_8pt_q31(src, m);
+        break;
+    case 5:
+        riscv_dsp_cfft_rd4by2_q31_small(src, m);
+        break;
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cfft_rd4_q31(src, m);
+        break;
+    default :
+        riscv_dsp_cfft_rd4by2_q31(src, m);
+        break;
+    }
+}
+#endif // ENA_FFT_REARCH
 /**
  * @brief cifft of q31 vectors.
  * @param[in, out] src   pointer of the input vector. After the function is executed, the
@@ -195,8 +545,36 @@ void riscv_dsp_cfft_q31(q31_t *src, uint32_t m);
  *
  * @image html cfft_rd2_q31.gif ""
  */
+#ifndef ENA_FFT_REARCH
 void riscv_dsp_cifft_q31(q31_t *src, uint32_t m);
-
+#else
+static inline void riscv_dsp_cifft_q31(q31_t *src, uint32_t m)
+{
+    switch (m)
+    {
+    case 2:
+        riscv_dsp_cifft_4pt_q31(src, m);
+        break;
+    case 3:
+        riscv_dsp_cifft_8pt_q31(src, m);
+        break;
+    case 5:
+        riscv_dsp_cifft_rd4by2_q31_small(src, m);
+        break;
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+        riscv_dsp_cifft_rd4_q31(src, m);
+        break;
+    default :
+        riscv_dsp_cifft_rd4by2_q31(src, m);
+        break;
+    }
+}
+#endif // ENA_FFT_REARCH
 /** Backward compatibility of cfft_rd2  */
 #define riscv_dsp_cfft_rd2_f32  riscv_dsp_cfft_f32
 /** Backward compatibility of cfft_rd2  */
@@ -845,6 +1223,7 @@ void riscv_dsp_mfcc_init_f16(riscv_dsp_mfcc_f16_t * instance,
  * @param[in]      *buf          pointer of the temporary buffer
  */
 void riscv_dsp_mfcc_f16(const riscv_dsp_mfcc_f16_t * instance, float16_t *src, float16_t *dst, float16_t *buf);
+
 
 #endif
 

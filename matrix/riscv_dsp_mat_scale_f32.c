@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL
 
 /**
  * @ingroup matrix
@@ -91,6 +92,25 @@ void riscv_dsp_mat_scale_f32(const float32_t * FUNC_RESTRICT src, float32_t scal
 
     size = (uint32_t) (row * col);
 
+#ifdef UNROLL
+    float32_t r1= 0.0f, r2 = 0.0f;
+    do
+    {
+        r1 = (*src++) * scale;
+        r2 = (*src++) * scale;
+        *dst++ = r1;
+        *dst++ = r2;
+
+        size -= 2;
+    } while(size > 1u); 
+
+    while(size > 0u)
+    {
+        *dst++ = (*src++) * scale;
+        size --;
+    }
+
+#else
     do
     {
         /* C(m,n) = A(m,n) * scale */
@@ -99,6 +119,7 @@ void riscv_dsp_mat_scale_f32(const float32_t * FUNC_RESTRICT src, float32_t scal
         size--;
     }
     while (size != 0u);
+#endif
 }
 
 /**

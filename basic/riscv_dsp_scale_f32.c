@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL
 
 /**
  * @ingroup basic
@@ -71,6 +72,23 @@
 void riscv_dsp_scale_f32(float32_t * FUNC_RESTRICT src, float32_t scale, float32_t * FUNC_RESTRICT  dst,
                      uint32_t size)
 {
+#ifdef UNROLL
+    float32_t r1, r2;
+    while (size > 1u)
+    {
+        r1 = (*src++) * scale;
+        r2 = (*src++) * scale;
+        *dst++ = r1;
+        *dst++ = r2;
+        size -= 2;
+    }
+
+    while (size > 0u)
+    {
+        *dst++ = (*src++) * scale;
+        size--;
+    }
+#else
     while (size != 0u)
     {
         /* y = x * scale */
@@ -78,6 +96,7 @@ void riscv_dsp_scale_f32(float32_t * FUNC_RESTRICT src, float32_t scale, float32
 
         size--;
     }
+#endif
 }
 
 /**

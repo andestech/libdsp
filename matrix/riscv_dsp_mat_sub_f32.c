@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL
 
 /**
  * @ingroup matrix
@@ -62,7 +63,28 @@ void riscv_dsp_mat_sub_f32(const float32_t * FUNC_RESTRICT src1, const float32_t
                        float32_t * FUNC_RESTRICT dst, uint32_t row, uint32_t col)
 {
     uint32_t size = row * col;
+#ifdef UNROLL
+    float32_t r1 = 0.0f, r2 = 0.0f, r3 = 0.0f, r4 = 0.0f;
+    do
+    {
+        r1 = (*src1++) - (*src2++);
+        r2 = (*src1++) - (*src2++);
+        r3 = (*src1++) - (*src2++);
+        r4 = (*src1++) - (*src2++);
+        *dst++ = r1;
+        *dst++ = r2;
+        *dst++ = r3;
+        *dst++ = r4;
+        size -= 4;
+    } while(size > 3u);
 
+    while(size > 0u)
+    {
+        *dst++ = (*src1++) - (*src2++);
+        size --;
+    }
+
+#else
     do
     {
         /* C(m,n) = A(m,n) + B(m,n) */
@@ -71,6 +93,7 @@ void riscv_dsp_mat_sub_f32(const float32_t * FUNC_RESTRICT src1, const float32_t
         size--;
     }
     while (size != 0u);
+#endif
 }
 
 /**

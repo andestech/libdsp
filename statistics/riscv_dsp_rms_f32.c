@@ -22,6 +22,7 @@
 //BSP400 doesn't need this file.
 #include <math.h>
 #include "internal_utils_math.h"
+#define UNROLL
 
 /**
  * @ingroup statistics
@@ -57,14 +58,31 @@ float32_t riscv_dsp_rms_f32(const float32_t *src, uint32_t size)
 {
     float32_t sum = 0.0f, tmp, dst;
     uint32_t i = size;
-
+#ifdef UNROLL
+    float32_t sum2 = 0.0f, tmp2;
+    while (i > 1u)
+    {
+        tmp = *src++;
+        tmp2 = *src++;
+        sum += tmp * tmp;
+        sum2 += tmp2 * tmp2;
+        i -= 2;
+    }
+    while (i > 0u)
+    {
+        tmp = *src++;
+        sum += tmp * tmp;
+        i--;
+    }
+    sum = sum + sum2;
+#else
     while (i != 0u)
     {
         tmp = *src++;
         sum += tmp * tmp;
         i--;
     }
-
+#endif
     dst = sqrtf(sum / (float32_t) size);
     return dst;
 

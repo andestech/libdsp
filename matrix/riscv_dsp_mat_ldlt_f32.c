@@ -21,6 +21,7 @@
 #include <math.h> //sqrtf
 #include <string.h> //memcpy
 #include "internal_nds_types.h"
+//#define FAST_INV
 
 #define SWAP_COLS_F32(A,i,j)    \
   for(w=0;w < n; w++)           \
@@ -89,11 +90,17 @@ int riscv_dsp_mat_ldlt_f32(float32_t* FUNC_RESTRICT src, float32_t* FUNC_RESTRIC
 
         pp[k] = j;
 
+#ifdef FAST_INV
+        a = 1.0f / pA[k * n + k];
+#else
         a = pA[k * n + k];
-
+#endif
+#ifdef FAST_INV
+        if (fabsf(pA[k * n + k]) < 1.0e-8f)
+#else
         if (fabsf(a) < 1.0e-8f)
+#endif
         {
-
             fullRank = 0;
             break;
         }
@@ -103,13 +110,22 @@ int riscv_dsp_mat_ldlt_f32(float32_t* FUNC_RESTRICT src, float32_t* FUNC_RESTRIC
             int x;
             for (x = k + 1; x < n; x++)
             {
+#ifdef FAST_INV
+                pA[w * n + x] = pA[w * n + x] - pA[w * n + k] * pA[x * n + k] * a;
+#else
                 pA[w * n + x] = pA[w * n + x] - pA[w * n + k] * pA[x * n + k] / a;
+#endif
             }
         }
 
+
         for (w = k + 1; w < n; w++)
         {
+#ifdef FAST_INV
+            pA[w * n + k] = pA[w * n + k] * a;
+#else
             pA[w * n + k] = pA[w * n + k] / a;
+#endif
         }
     }
 

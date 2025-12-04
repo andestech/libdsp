@@ -19,6 +19,7 @@
 
 #include <config.h>
 #include <math.h> //sqrtf
+#define UNROLL
 
 int riscv_dsp_mat_cholesky_f32(float32_t* FUNC_RESTRICT src, float32_t* FUNC_RESTRICT dst, uint32_t row, uint32_t col)
 {
@@ -39,11 +40,29 @@ int riscv_dsp_mat_cholesky_f32(float32_t* FUNC_RESTRICT src, float32_t* FUNC_RES
     {
         for (j = i; j < n; j++)
         {
+#ifdef UNROLL
+            float32_t sum1 = 0.0f;
+            float32_t sum2 = 0.0f;
+            sum = 0.0f;
+            for (k = 0; k < i; k+=4)
+            {
+                sum1 += pG[i * n + k] * pG[j * n + k];
+                sum2 += pG[i * n + k+1] * pG[j * n + k+1];
+                sum1 += pG[i * n + k+2] * pG[j * n + k+2];
+                sum2 += pG[i * n + k+3] * pG[j * n + k+3];
+            }
+            for (; k < i; k++)
+            {
+                sum1 += pG[i * n + k] * pG[j * n + k];
+            }
+            sum = sum1 + sum2;
+#else
             sum = 0.0f;
             for (k = 0; k < i; k++)
             {
                 sum += pG[i * n + k] * pG[j * n + k];
             }
+#endif
             pG[j * n + i] = pA[j * n + i] - sum;
         }
 

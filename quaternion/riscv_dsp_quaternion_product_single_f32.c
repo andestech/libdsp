@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
-
+#define MODY_ALGO
 /**
   @brief         Floating-point product of two quaternions.
   @param[in]     src1       first quaternion
@@ -29,8 +29,37 @@
 
 void riscv_dsp_quaternion_product_single_f32(const float32_t *src1, const float32_t *src2, float32_t *dst)
 {
+#ifdef MODY_ALGO
+    float32_t t_0, t_1, t_2, t_3;
+
+    t_0 = src1[0] * src2[0];
+    t_1 = src1[0] * src2[1];
+    t_2 = src1[0] * src2[2];
+    t_3 = src1[0] * src2[3];
+
+    t_0 -= (src1[1] * src2[1]);
+    t_1 += (src1[1] * src2[0]);
+    t_2 += (src1[2] * src2[0]);
+    t_3 += (src1[3] * src2[0]);
+
+    t_0 -= (src1[2] * src2[2]);
+    t_1 += (src1[2] * src2[3]);
+    t_2 += (src1[3] * src2[1]);
+    t_3 += (src1[1] * src2[2]);
+
+    t_0 -= (src1[3] * src2[3]);
+    t_1 -= (src1[3] * src2[2]);
+    t_2 -= (src1[1] * src2[3]);
+    t_3 -= (src1[2] * src2[1]);
+
+    dst[0] = t_0;
+    dst[1] = t_1;
+    dst[2] = t_2;
+    dst[3] = t_3;
+#else
     dst[0] = src1[0] * src2[0] - src1[1] * src2[1] - src1[2] * src2[2] - src1[3] * src2[3];
     dst[1] = src1[0] * src2[1] + src1[1] * src2[0] + src1[2] * src2[3] - src1[3] * src2[2];
     dst[2] = src1[0] * src2[2] + src1[2] * src2[0] + src1[3] * src2[1] - src1[1] * src2[3];
     dst[3] = src1[0] * src2[3] + src1[3] * src2[0] + src1[1] * src2[2] - src1[2] * src2[1];
+#endif
 }

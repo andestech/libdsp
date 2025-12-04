@@ -40,7 +40,6 @@
 /* function description */
 q15_t riscv_dsp_min_q15(const q15_t * FUNC_RESTRICT src, uint32_t size, uint32_t * FUNC_RESTRICT index)
 {
-    q31_t min_val, temp_val;
     uint32_t min_index, i;
 
     //First, check if input size is zero?
@@ -49,9 +48,10 @@ q15_t riscv_dsp_min_q15(const q15_t * FUNC_RESTRICT src, uint32_t size, uint32_t
         *index = 0;
         return (q15_t)0x7fff;
     }
+    q15_t min_val, temp_val;
 
     i = min_index = 0U;
-    min_val = (q31_t) * src++;
+    min_val = * src++;
 
     while (i < (size - 1))
     {
@@ -65,7 +65,7 @@ q15_t riscv_dsp_min_q15(const q15_t * FUNC_RESTRICT src, uint32_t size, uint32_t
     }
 
     *index = min_index;
-    return (q15_t)min_val;
+    return min_val;
 
 }
 

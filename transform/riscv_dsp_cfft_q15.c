@@ -37,6 +37,14 @@
  *                           is of size 2 * n while n = 2 ** m.
  * @return none
  */
+#ifdef ENA_FFT_REARCH
+extern int32_t riscv_dsp_cfft_rd2_q15_noscale(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4_q15_noscale(q15_t *src, uint32_t m);
+#else
+extern int32_t riscv_dsp_cfft_rd4by2_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4by2_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_rd4by2_q15_small(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_rd4by2_q15_small(q15_t *src, uint32_t m);
 
 extern int32_t riscv_dsp_cfft_rd2_q15(q15_t *src, uint32_t m);
 extern int32_t riscv_dsp_cfft_rd4_q15(q15_t *src, uint32_t m);
@@ -46,10 +54,25 @@ extern int32_t riscv_dsp_cifft_rd4_q15(q15_t *src, uint32_t m);
 extern int32_t riscv_dsp_cfft_rd2_q15_noscale(q15_t *src, uint32_t m);
 extern int32_t riscv_dsp_cfft_rd4_q15_noscale(q15_t *src, uint32_t m);
 
+extern int32_t riscv_dsp_cfft_8pt_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cfft_4pt_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_8pt_q15(q15_t *src, uint32_t m);
+extern int32_t riscv_dsp_cifft_4pt_q15(q15_t *src, uint32_t m);
+
+
 void riscv_dsp_cfft_q15(q15_t *src, uint32_t m)
 {
     switch (m)
     {
+    case 2: 
+        riscv_dsp_cfft_4pt_q15(src, m);
+        break;
+    case 3: 
+        riscv_dsp_cfft_8pt_q15(src, m);
+        break;
+    case 5:
+        riscv_dsp_cfft_rd4by2_q15_small(src, m);
+        break;
     case 4:
     case 6:
     case 8:
@@ -59,7 +82,7 @@ void riscv_dsp_cfft_q15(q15_t *src, uint32_t m)
         riscv_dsp_cfft_rd4_q15(src, m);
         break;
     default :
-        riscv_dsp_cfft_rd2_q15(src, m);
+        riscv_dsp_cfft_rd4by2_q15(src, m);
         break;
     }
 }
@@ -78,6 +101,15 @@ void riscv_dsp_cifft_q15(q15_t *src, uint32_t m)
 {
     switch (m)
     {
+    case 2:
+        riscv_dsp_cifft_4pt_q15(src, m);
+        break;
+    case 3:
+        riscv_dsp_cifft_8pt_q15(src, m);
+        break;
+    case 5:
+        riscv_dsp_cifft_rd4by2_q15_small(src, m);
+        break;
     case 4:
     case 6:
     case 8:
@@ -87,11 +119,11 @@ void riscv_dsp_cifft_q15(q15_t *src, uint32_t m)
         riscv_dsp_cifft_rd4_q15(src, m);
         break;
     default :
-        riscv_dsp_cifft_rd2_q15(src, m);
+        riscv_dsp_cifft_rd4by2_q15(src, m);
         break;
     }
 }
-
+#endif // ENA_FFT_REARCH
 void riscv_dsp_cfft_q15_noscale(q15_t *src, uint32_t m)
 {
 

@@ -4,7 +4,7 @@ ENA_ACCURACY=1
 ENA_PERF=0
 ENA_LDSP=0
 ENA_DEBUG=0
-ENA_FPGA=1
+ENA_FPGA=2
 ## you can check item in ../test_list, for accuracy test
 UNIT_TEST_FUNC=""
 ## you can check item in gen_perf_benchmarks.sh, for perf test
@@ -64,11 +64,11 @@ elif [ ${ENA_FPGA} -eq 2 ];then
     TARGET="QEMU"
 
     #Check QEMU exit or not
-    which $QEMU
+    which $QEMU_SYS_RV32
     qemu_exit=$?
     if [ $qemu_exit != "0" ];then
-        echo "$QEMU not found!"
-        echo "please export QEMU qemu-system-riscv32"
+        echo "$QEMU_SYS_RV32 not found!"
+        echo "please export QEMU_SYS_RV32 qemu-system-riscv32"
         exit 1
     fi
 else

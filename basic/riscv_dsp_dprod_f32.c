@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL
 
 /**
  * @ingroup basic
@@ -51,7 +52,23 @@
 float32_t riscv_dsp_dprod_f32(float32_t * FUNC_RESTRICT src1, float32_t * FUNC_RESTRICT src2, uint32_t size)
 {
     float32_t sum = 0.0f;
+#ifdef UNROLL
+    float32_t sum2 = 0.0f;
+    while (size > 1u)
+    {
+        sum += (*src1++) * (*src2++);
+        sum2 += (*src1++) * (*src2++);
+        size -= 2;
+    }
+    while (size > 0u)
+    {
+        sum += (*src1++) * (*src2++);
+ 
+        size --;
+    }
+    sum = sum + sum2;
 
+#else
     while (size != 0u)
     {
         /* y = x1[0] * x2[0] + x1[1] * x2[1] + x1[2] * x2[2]
@@ -60,7 +77,7 @@ float32_t riscv_dsp_dprod_f32(float32_t * FUNC_RESTRICT src1, float32_t * FUNC_R
 
         size--;
     }
-
+#endif
     return (sum);
 }
 

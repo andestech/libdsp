@@ -18,17 +18,38 @@
  ******************************************************************************/
 
 #include <config.h>
+#define UNROLL
 
 /* function description */
 float32_t riscv_dsp_accum_f32(const float32_t *src, uint32_t size)
 {
     float32_t sum = 0.0f;
     uint32_t loop = size;
-
+#ifdef UNROLL
+    (void) loop;
+    uint32_t loop2 = size >> 2;
+    uint32_t rmder = size & 3;
+    float32_t sum1 = 0.0f, sum2 = 0.0f;
+    while (loop2 > 0U)
+    {
+        sum1 += *src++;
+        sum2 += *src++;
+        sum1 += *src++;
+        sum2 += *src++;
+        loop2 = loop2 - 1;
+    }
+    while(rmder > 0U)
+    {
+        sum1 += *src++;
+        rmder = rmder - 1;
+    }
+    sum = sum1 + sum2;
+#else
     while (loop > 0U)
     {
         sum += *src++;
         loop--;
     }
+#endif
     return sum;
 }

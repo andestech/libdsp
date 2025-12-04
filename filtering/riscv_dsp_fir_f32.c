@@ -19,6 +19,7 @@
 
 #include <config.h>
 #include "internal_filtering_math.h"
+#define UNROLL
 
 /**
  * @ingroup filtering
@@ -83,6 +84,7 @@
  */
 
 /* function description */
+
 void riscv_dsp_fir_f32(const riscv_dsp_fir_f32_t * FUNC_RESTRICT instance,
                    float32_t * FUNC_RESTRICT src, float32_t * FUNC_RESTRICT dst, uint32_t size)
 {
@@ -105,12 +107,28 @@ void riscv_dsp_fir_f32(const riscv_dsp_fir_f32_t * FUNC_RESTRICT instance,
         pf = instance->coeff;
 
         i = coeff_size;
+#ifdef UNROLL
+        float32_t acc1 = 0.0f;
+        while (i > 1u)
+        {
+            acc += *px++ **pf++;
+            acc1 += *px++ **pf++;
+            i -= 2;
+        }
+
+        while (i > 0u)
+        {
+            acc += *px++ **pf++;
+            i--;
+        }
+        acc = acc + acc1;
+#else
         while (i != 0u)
         {
             acc += *px++ **pf++;
             i--;
         }
-
+#endif
         *dst++ = acc;
         state = state + 1;
         size--;

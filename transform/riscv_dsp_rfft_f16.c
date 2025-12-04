@@ -20,10 +20,13 @@
 #include <config.h>
 #include "internal_transform_math.h"
 
+#ifndef ENA_FFT_REARCH
 //Declare the external functions
 extern int32_t riscv_dsp_cfft_f16(float16_t *src, uint32_t m);
 extern int32_t riscv_dsp_cifft_f16(float16_t *src, uint32_t m);
-
+#else
+#include "riscv_dsp_transform_math.h"
+#endif
 /**
  * @ingroup transform
  */

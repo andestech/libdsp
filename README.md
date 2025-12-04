@@ -1,23 +1,25 @@
-Open source for Andes DSP library
+## Andes DSP library
 
-- User manual:
+Andes DSP Library provides comprehensive functions designed to simplify and accelerate the development
+of digital signal processing systems, ensuring high code efficiency and streamlined code size. These
+functions include basic operations for vectors, matrices, and complex vectors, as well as functions that
+compute advanced algorithms such as filtering and transform functions
 
-   * docs/html/AndeSoft_DSP_Library_User_Manual_UM179.html
+- Andes DSP Library user manual
+    The user manual of Andes DSP Library can be found under docs/html.
+- Prebuilt library
+    The prebuilt library compiled with x86_64 GCC is available in the `prebuilt/` folder.
+- For any toolchains
+    - Steps to build the Andes DSP Library
+        Run ***build_purec_lib.sh*** with the compiler name as the argument. For example:
 
+        `./build_purec_lib.sh "riscv32-unknown-elf-gcc"`
+        
+        Once the build is complete, a static library named ***libdsp.a*** will be generated under ***build_dir*** folder. For more usage details, please refer to the comments at the beginning of ***build_purec_lib.sh***.
+    - Steps to build the example
+        1. Navigate to *example* folder
+        2. Build the example with the following command (assumes *riscv32-unknown-elf-gcc* or "gcc" as the compiler):
+           
+           `riscv32-elf-gcc -I./../include -o demo.adx demo.c ../build_dir/libdsp.a`
 
-- How to build libdsp.a
-
-  - execute the script "build_purec_lib.sh", then "libdsp.a" will be compiled in the "build_dir/" folder
-
-     $ ./build_purec_lib.sh ${COMPILER_NAME}
-       - $1: COMPILER_NAME (ex: riscv32-elf-gcc, riscv64-elf-gcc, gcc, riscv32-elf-clang, riscv64-elf-clang , ...)
-
-     Ex: ./build_purec_lib.sh "riscv32-elf-gcc"  ## for Andes toolchain <br>
-     Ex: ./build_purec_lib.sh "gcc"              ## for x86 toolchain
-
-- How to link libdsp.a
-
-  - Here is a demo.c for function "riscv_dsp_add_f32"
-
-     $ riscv32-elf-gcc -I./include -o demo.adx demo.c build_dir/libdsp.a  <br>
-     $ gcc -I./include -o demo.adx demo.c build_dir/libdsp.a
+           `gcc  -I./../include/ -o demo.adx demo.c ../build_dir/libdsp.a`

@@ -20,6 +20,7 @@
 #include <config.h>
 #include "internal_isa.h"
 #include "internal_utils_math.h"
+#define MODY_ALGO
 
 /**
  * @ingroup utils
@@ -71,12 +72,20 @@ void riscv_dsp_convert_f32_q31(float32_t * FUNC_RESTRICT src, q31_t * FUNC_RESTR
         else
         {
 #endif
+#ifdef MODY_ALGO
+            
+            float32_t offset[2] = {-0.5, 0.5};
+            in *= (float32_t)(2147483648.0);
+            in += offset[(in >= 0.0f)];
+            rst = (q31_t)in;
+#else
             in *= (float32_t)(2147483648.0);
             if (in >= (float32_t)0)
                 in += (float32_t)0.5;
             else
                 in -= (float32_t)0.5;
             rst = (q31_t)in;
+#endif
 #ifdef ENA_SAT_RANGE
         }
 #endif

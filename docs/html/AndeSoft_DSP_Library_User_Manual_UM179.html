@@ -5,9 +5,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<meta name="author" content="Andes Technology">
+<meta name="author" content="Andes Technology Corporation">
 <meta name="copyright" content="2018-{sys: date +%Y}">
-<title>AndeSoft&#8482; DSP Library User Manual</title>
+<title>AndeSoft DSP Library User Manual</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -440,11 +440,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>AndeSoft&#8482; DSP Library User Manual</h1>
+<h1>AndeSoft DSP Library User Manual</h1>
 <div class="details">
-<span id="author" class="author">Andes Technology</span><br>
+<span id="author" class="author">Andes Technology Corporation</span><br>
 <span id="email" class="email"><a href="mailto:support@andestech.com">support@andestech.com</a></span><br>
-<span id="revnumber">version 2.7.0</span>
+<span id="revnumber">version 2.7.1</span>
 </div>
 <div id="toc" class="toc">
 <div id="toctitle">Table of Contents</div>
@@ -667,8 +667,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>This document contains information about the specifications of
-digital signal processing (DSP) functions in AndeSoft DSP Library (DSP Library, also known as libdsp)
-for ISA V5 toolchains and describes how to use these functions.</p>
+digital signal processing (DSP) functions in AndeSoft DSP Library (hereafter DSP Library or libdsp)
+for AndeStar V5 toolchains and describes how to use these functions.</p>
 </div>
 <div class="paragraph">
 <p>DSP Library provides comprehensive functions designed to simplify and accelerate
@@ -751,10 +751,10 @@ They are named according to the function categories, as listed below:</p>
 To optimize them with DSP ISA Extension, ensure you apply the compiler flag <code>-mext-dsp</code> to enable the toolchain support.</p>
 </div>
 <div class="paragraph">
-<p>DSP Library defines several data types to properly store signal data for later processing.
-These data types, defined in <code>riscv_dsp_math_types.h</code>, are as follows:</p>
+<p>DSP Library defines several data types in <code>riscv_dsp_math_types.h</code> to properly store signal data for later processing.</p>
 </div>
 <div class="listingblock">
+<div class="title">riscv_dsp_math_types.h</div>
 <div class="content">
 <pre class="highlight"><code class="language-c" data-lang="c">typedef int8_t q7_t;         /* Q7 type */
 typedef int8_t s8_t;         /* S8 type */
@@ -780,7 +780,7 @@ typedef _Float16 float16_t;  /* half-precision floating-point (F16) type */</cod
 <td class="content">
 <div class="paragraph">
 <p>If your application uses functions involving the half-precision floating-point data type, compile it with the<br>
-<code>-mzfh</code> option and ensure that your toolchain  (e.g., <code>v5f</code> or <code>v5d</code> toolchain) supports hard-float;
+<code>-mzfh</code> option and ensure that your toolchain  (e.g., <code>v5f</code> or <code>v5d</code>) supports HardFloat;
 otherwise, execution issues may occur.</p>
 </div>
 </td>
@@ -865,15 +865,15 @@ to enable optimizations specialized for these processors.<br></p>
 </div>
 <div class="paragraph">
 <p>If your application uses functions involving half-precision floating-point data types (e.g., <code>riscv_dsp_log_f16</code>),
-ensure that your toolchain (e.g., <code>v5f</code> or <code>v5d</code> toolchain) supports hard-float.<br></p>
+ensure that your toolchain (e.g., <code>v5f</code> or <code>v5d</code>) supports HardFloat.<br></p>
 </div>
 <div class="paragraph">
-<p>Compile with the <code>-mzfh</code> option to enable compiler and linker support for half-precision data types (<code>_Float16</code>).
-Compilation will fail without this option.<br></p>
+<p>Compile the application with the <code>-mzfh</code> option to enable compiler and linker support for half-precision data types (<code>_Float16</code>).
+The compilation process fails if this option is omitted.<br></p>
 </div>
 <div class="paragraph">
 <p>In addition, to prevent potential issues when loading the program,
-be aware that applications built with the following options cannot be executed on targets that lack the corresponding support:</p>
+note that applications built with the following options require corresponding target support; otherwise, execution issues may occur:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1001,15 +1001,15 @@ you can optionally use the <code>-mtune=andes-45-series</code> option to enable 
 </div>
 <div class="paragraph">
 <p>If your application uses functions involving half-precision floating-point data types (e.g., <code>riscv_dsp_log_f16</code>),
-ensure that your toolchain (e.g., <code>v5f</code> or <code>v5d</code> toolchain) supports hard-float.<br></p>
+ensure that your toolchain (e.g., <code>v5f</code> or <code>v5d</code>) supports HardFloat.<br></p>
 </div>
 <div class="paragraph">
-<p>Compile with the <code>-mzfh</code> option to enable compiler and linker support for the half-precision data type (<code>_Float16</code>).
-Compilation will fail without this option.<br></p>
+<p>Compile the application with the <code>-mzfh</code> option to enable compiler and linker support for the half-precision data type (<code>_Float16</code>).
+The compilation process fails if this option is omitted.<br></p>
 </div>
 <div class="paragraph">
 <p>In addition, to prevent potential issues when loading the program,
-be aware that applications built with the following options cannot be executed on targets that lack the corresponding support:</p>
+note that applications built with the following options require corresponding target support; otherwise, execution issues may occur:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -48361,8 +48361,8 @@ DSP Library supports the following conversion code as <code>riscv_dsp_img_color_
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 2.7.0<br>
-Last updated 2025-05-19 10:18:34 +0800
+Version 2.7.1<br>
+Last updated 2025-10-27 16:36:50 +0800
 </div>
 </div>
 <script type="text/x-mathjax-config">
